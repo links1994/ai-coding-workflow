@@ -1,0 +1,343 @@
+workflow:
+  name: req-decomposition
+  description: 需求拆分流程 - 将大而杂的产品需求分解为结构化、可独立交付的子需求
+  version: 1.0.0
+  type: analysis
+  
+  # 六阶段生命周期配置
+  lifecycle:
+    research:
+      enabled: true
+      description: 研读产品文档，加载架构规范和拆分模式
+      steps:
+        - id: load_inputs
+          name: 加载输入文档
+          action: read_product_doc
+          inputs: [product_doc]
+          outputs: [product_requirements]
+          
+        - id: load_rules
+          name: 加载架构规则
+          action: load_rules
+          inputs: [architecture_rules]
+          outputs: [architecture_constraints]
+          
+        - id: load_patterns
+          name: 加载拆分模式
+          action: load_knowledge
+          inputs: [split_patterns]
+          outputs: [split_patterns_context]
+          
+        - id: analyze_context
+          name: 分析上下文
+          action: analyze
+          inputs: [product_requirements, architecture_constraints]
+          outputs: [context_analysis]
+          
+    decision:
+      enabled: true
+      description: 确定拆分策略和维度
+      steps:
+        - id: determine_strategy
+          name: 确定拆分策略
+          action: decide
+          inputs: [context_analysis, split_patterns_context]
+          outputs: [split_strategy]
+          decisions:
+            - 按业务域拆分 vs 按技术模块拆分
+            - 深度优先 vs 广度优先
+            - 功能驱动 vs 数据驱动
+            
+        - id: define_dimensions
+          name: 定义拆分维度
+          action: define
+          inputs: [split_strategy]
+          outputs: [split_dimensions]
+          
+    plan:
+      enabled: true
+      description: 制定拆分计划和执行步骤
+      steps:
+        - id: create_plan
+          name: 创建拆分计划
+          action: plan
+          inputs: [split_strategy, split_dimensions]
+          outputs: [decomposition_plan]
+          
+        - id: validate_plan
+          name: 验证计划可行性
+          action: validate
+          inputs: [decomposition_plan, architecture_constraints]
+          outputs: [validated_plan]
+          
+    execute:
+      enabled: true
+      description: 执行拆分，产出结构化需求
+      agent: req-decomposer
+      steps:
+        - id: scan_requirements
+          name: 需求全景扫描
+          action: scan
+          inputs: [product_requirements]
+          outputs: [requirement_list]
+          
+        - id: domain_partition
+          name: 业务域划分
+          action: partition
+          inputs: [requirement_list, architecture_constraints]
+          outputs: [domain_mapping]
+          
+        - id: build_tree
+          name: 构建需求树
+          action: build_tree
+          inputs: [domain_mapping, split_dimensions]
+          outputs: [requirements_tree]
+          source_of_truth: true
+          
+        - id: confirm_requirements_tree
+          name: 确认需求树
+          action: confirm
+          inputs: [requirements_tree]
+          outputs: [tree_confirmed]
+          description: |
+            展示生成的需求树，等待用户确认。
+            询问："需求树已生成，是否还有其他需要补充或调整的地方？"
+          require_confirmation: true
+          
+        - id: analyze_dependencies
+          name: 分析依赖关系
+          action: analyze_deps
+          inputs: [requirements_tree]
+          outputs: [dependency_graph]
+          
+        - id: confirm_dependencies
+          name: 确认依赖关系
+          action: confirm
+          inputs: [dependency_graph]
+          outputs: [deps_confirmed]
+          description: |
+            展示依赖关系图，等待用户确认。
+            询问："依赖关系已分析完成，是否还有其他需要确认的依赖？"
+          require_confirmation: true
+          
+        - id: batch_planning
+          name: 批次优先级排序
+          action: batch
+          inputs: [requirements_tree, dependency_graph]
+          outputs: [execution_plan]
+          
+        - id: confirm_execution_plan
+          name: 确认执行计划
+          action: confirm
+          inputs: [execution_plan]
+          outputs: [plan_confirmed]
+          description: |
+            展示批次执行计划，等待用户确认。
+            询问："执行计划已制定，是否还有其他需要调整的批次安排？"
+          require_confirmation: true
+          
+        - id: generate_report
+          name: 生成拆分报告
+          action: generate
+          inputs: [requirements_tree, dependency_graph, execution_plan]
+          outputs: [decomposition_report]
+          
+    feedback:
+      enabled: true
+      description: 根据用户反馈调整拆分结果
+      steps:
+        - id: collect_feedback
+          name: 收集用户反馈
+          action: confirm
+          inputs: [decomposition_report]
+          outputs: [user_feedback]
+          description: 展示拆分结果，询问用户是否还有其他需要调整的地方
+          
+        - id: apply_adjustments
+          name: 应用调整
+          action: fix
+          inputs: [decomposition_report, user_feedback]
+          outputs: [adjusted_report]
+          condition: 当用户提出调整意见时
+          description: 根据用户反馈调整需求拆分
+      
+    review:
+      enabled: true
+      description: 验证拆分完整性和依赖合理性
+      steps:
+        - id: validate_completeness
+          name: 验证完整性
+          action: validate
+          inputs: [decomposition_report, product_requirements]
+          outputs: [completeness_check]
+          
+        - id: validate_dependencies
+          name: 验证依赖合理性
+          action: validate
+          inputs: [dependency_graph]
+          outputs: [dependency_check]
+          
+        - id: extract_patterns
+          name: 提炼拆分模式
+          action: extract
+          inputs: [decomposition_report, split_strategy]
+          outputs: [new_patterns]
+          condition: 当发现新的可复用模式时
+
+  # 输入定义
+  inputs:
+    - name: product_doc
+      type: file
+      required: true
+      description: 产品需求文档（PRD），支持 .md/.pdf/.docx 格式
+      path: workspace/inputs/product_doc
+      
+    - name: decomposition_rules
+      type: rule
+      required: true
+      description: 需求拆分规则集合，定义Feature拆分策略与服务分层规范
+      path: .qoder/rules/req-decomposition/
+      pattern: "*.md"
+      load_order: 
+        - 01-feature-definition.md
+        - 02-service-layering.md
+      auto_load: true
+      
+    - name: code_generation_rules
+      type: rule
+      required: false
+      description: 代码生成规范，用于指导下游代码生成（门面服务/应用服务/Feign接口）
+      path: .qoder/rules/code-generation/
+      pattern: "*.md"
+      condition: 当拆分结果需要生成代码时
+      
+    - name: split_patterns
+      type: knowledge
+      required: false
+      description: 历史拆分模式，自动从 knowledge/patterns/ 加载
+      path: knowledge/patterns/requirement-splitting/
+      auto_load: true
+      pattern_match: true
+      
+    - name: context
+      type: string
+      required: false
+      description: 额外上下文信息（业务背景、特殊约束等）
+
+  # 输出定义
+  outputs:
+    - name: decomposition_report
+      type: file
+      description: 需求拆分报告（合并输出）
+      path: workspace/outputs/decomposition.md
+      format: markdown
+      sections:
+        - 需求全景扫描
+        - 业务域划分
+        - 需求树（可信源 YAML 块）
+        - 依赖关系图（Mermaid）
+        - 批次执行计划
+        - 关键决策记录
+        
+    - name: new_patterns
+      type: knowledge
+      description: 新提炼的可复用拆分模式
+      path: knowledge/patterns/requirement-splitting/
+      condition: 当发现新的可复用模式时
+      format: yaml
+
+  # 可信源定义
+  source_of_truth:
+    - name: requirements_tree
+      type: yaml
+      location: decomposition_report
+      path: "## 3. 需求树"
+      description: 需求结构的唯一可信源，所有下游产物依赖于此
+      
+  # 级联更新规则
+  cascade_rules:
+    - trigger: requirements_tree
+      effects: [dependency_graph, execution_plan]
+      action: regenerate
+      description: 需求树变更时，重新生成依赖图和执行计划
+      
+    - trigger: new_patterns
+      effects: [knowledge/patterns/]
+      action: append
+      description: 新发现的模式沉淀到知识库
+
+  # 产物模板
+  templates:
+    decomposition_report: |
+      # 需求拆分报告: {{program.name}}
+      
+      > 生成时间: {{timestamp}}
+      > 基于流程: {{workflow.name}} v{{workflow.version}}
+      
+      ## 1. 需求全景扫描
+      
+      ### 1.1 功能需求
+      <!-- 列出所有功能点 -->
+      
+      ### 1.2 非功能需求
+      <!-- 性能、安全、扩展性等 -->
+      
+      ## 2. 业务域划分
+      
+      <!-- 基于公司架构映射到具体服务模块 -->
+      
+      | 业务域 | 对应模块 | 包含需求 |
+      |--------|----------|----------|
+      
+      ## 3. 需求树
+      
+      ```yaml
+      # 可信源 - 需求结构定义
+      requirements:
+        - id: R001
+          name: 示例需求
+          domain: 用户域
+          module: mall-user-service
+          type: functional
+          priority: high
+          dependencies: []
+          description: 需求描述
+          acceptance_criteria:
+            - 验收标准1
+            - 验收标准2
+      ```
+      
+      ## 4. 依赖关系图
+      
+      ```mermaid
+      graph TD
+          R001[需求1] --> R002[需求2]
+          R001 --> R003[需求3]
+          R002 --> R004[需求4]
+      ```
+      
+      ## 5. 批次执行计划
+      
+      | 批次 | 需求ID | 需求名称 | 优先级 | 前置依赖 | 预计工期 |
+      |------|--------|----------|--------|----------|----------|
+      | 1 | R001 | xxx | high | - | 3d |
+      
+      ## 6. 关键决策记录
+      
+      | 决策点 | 选择 | 理由 |
+      |--------|------|------|
+      | 拆分维度 | 按业务域 | 与公司架构对齐 |
+
+  # 执行约束
+  constraints:
+    max_requirements: 100
+    max_depth: 5
+    require_dependency_check: true
+    require_batch_validation: true
+
+  # 元数据
+  metadata:
+    author: workflow-designer
+    created: "2026-03-15"
+    tags: [requirement, decomposition, analysis]
+    related_programs: []

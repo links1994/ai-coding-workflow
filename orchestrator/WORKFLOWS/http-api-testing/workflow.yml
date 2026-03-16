@@ -1,0 +1,429 @@
+---
+workflow:
+  name: http-api-testing
+  description: HTTP 接口自动化测试流程 - 基于 Nacos 和数据库配置验证 API 功能，测试通过后归档
+  version: 1.0.0
+  type: testing
+
+  # 六阶段生命周期配置
+  lifecycle:
+    research:
+      enabled: true
+      description: 分析测试需求，收集被测接口信息
+      steps:
+        - id: analyze_test_scope
+          name: 分析测试范围
+          action: analyze
+          inputs: [tech_spec, implementation_report]
+          outputs: [test_scope]
+          description: 从 tech-spec 和实现报告中提取需要测试的接口列表
+
+        - id: check_environment_prerequisites
+          name: 检查环境前置条件
+          action: validate
+          inputs: [target_services]
+          outputs: [environment_status]
+          description: |
+            验证测试环境是否满足要求：
+            1. Nacos 服务是否可访问（配置中心）
+            2. 数据库是否可连接
+            3. 目标服务是否已部署
+
+    decision:
+      enabled: true
+      description: 确定测试策略和生成测试用例
+      steps:
+        - id: determine_test_strategy
+          name: 确定测试策略
+          action: decide
+          inputs: [test_scope, environment_status]
+          outputs: [test_strategy]
+          description: |
+            基于接口类型确定测试策略：
+            - 正常场景测试（必填参数、完整参数）
+            - 异常场景测试（参数缺失、非法值、边界值）
+            - 依赖测试（上下游接口调用链）
+
+        - id: generate_test_cases
+          name: 生成测试用例
+          action: generate
+          inputs: [test_strategy, tech_spec]
+          outputs: [test_cases]
+          description: |
+            生成标准化测试用例文件：
+            - 每个接口生成多个测试场景
+            - 包含请求参数、预期响应、断言规则
+            - 标注测试优先级（P0/P1/P2）
+            
+        - id: confirm_test_cases
+          name: 确认测试用例
+          action: confirm
+          inputs: [test_cases]
+          outputs: [cases_confirmed]
+          description: |
+            展示生成的测试用例清单，等待用户确认。
+            
+            询问："测试用例已生成，是否还有其他需要补充的测试场景？"
+          require_confirmation: true
+
+    plan:
+      enabled: true
+      description: 制定测试执行计划
+      steps:
+        - id: create_test_plan
+          name: 创建测试计划
+          action: plan
+          inputs: [test_cases, environment_status]
+          outputs: [test_plan]
+          description: |
+            制定测试执行计划：
+            - 按依赖关系排序测试用例
+            - 确定并行/串行执行策略
+            - 分配测试资源
+
+        - id: prepare_test_data
+          name: 准备测试数据
+          action: prepare
+          inputs: [test_plan, database_schema, test_data_sql]
+          outputs: [prepared_test_data]
+          description: |
+            准备测试所需数据：
+            - 初始化数据库测试数据
+            - 准备 Nacos 配置
+            - 清理历史测试数据
+
+    execute:
+      enabled: true
+      description: 执行自动化测试
+      steps:
+        - id: run_api_tests
+          name: 执行 API 测试
+          action: execute
+          inputs: [test_plan, prepared_test_data]
+          outputs: [test_results, test_report]
+          description: |
+            执行 HTTP 接口自动化测试：
+            - 按测试计划顺序执行
+            - 记录请求/响应详情
+            - 执行断言验证
+            - 生成测试报告
+
+        - id: validate_test_results
+          name: 验证测试结果
+          action: validate
+          inputs: [test_results, test_plan]
+          outputs: [validation_result]
+          description: |
+            验证测试结果：
+            - P0 用例必须 100% 通过
+            - P1 用例通过率 >= 90%
+            - 无阻塞性缺陷
+
+    feedback:
+      enabled: true
+      description: 测试结果反馈与问题修复
+      steps:
+        - id: analyze_failures
+          name: 分析失败用例
+          action: analyze
+          inputs: [test_results]
+          outputs: [failure_analysis]
+          condition: 当存在失败用例时
+          description: |
+            分析测试失败原因：
+            - 区分代码缺陷/环境问题/用例问题
+            - 定位问题根因
+            - 评估修复成本
+
+        - id: fix_issues
+          name: 修复问题
+          action: fix
+          inputs: [failure_analysis]
+          outputs: [fix_result]
+          condition: 当需要修复时
+          description: |
+            修复发现的问题：
+            - 代码缺陷：返回需求实现流程修复
+            - 环境问题：调整环境配置
+            - 用例问题：更新测试用例
+
+        - id: rerun_failed_tests
+          name: 重跑失败测试
+          action: execute
+          inputs: [fix_result, test_plan]
+          outputs: [retest_results]
+          condition: 当修复完成后
+          description: 重跑失败的测试用例，验证修复效果
+          
+        - id: confirm_test_complete
+          name: 确认测试完成
+          action: confirm
+          inputs: [retest_results, test_report]
+          outputs: [test_confirmed]
+          description: |
+            展示测试结果，等待用户确认。
+            
+            询问："测试执行已完成，是否还有其他需要确认的内容？"
+          require_confirmation: true
+
+    review:
+      enabled: true
+      description: 测试报告生成与结果汇总
+      steps:
+        - id: generate_test_report
+          name: 生成测试报告
+          action: generate
+          inputs: [test_results, validation_result, test_cases, test_plan]
+          outputs: [test_report]
+          description: |
+            生成完整测试报告：
+            - 测试执行摘要（通过/失败/跳过）
+            - 测试覆盖率统计
+            - 通过率统计（按优先级）
+            - 失败用例详情及分析
+            - 遗留问题清单
+            - 性能指标（可选）
+            - 测试结论与建议
+
+        - id: summarize_test_results
+          name: 汇总测试结果
+          action: summarize
+          inputs: [test_report, feature_id]
+          outputs: [test_summary]
+          description: |
+            汇总测试结果供后续流程使用：
+            - 测试是否通过（P0 100% + P1 >= 90%）
+            - 关键问题列表
+            - 风险提示
+            - 建议后续操作（通过/修复后重测/阻塞）
+
+  # 输入定义
+  inputs:
+    - name: feature_id
+      type: string
+      required: true
+      description: 要测试的 Feature ID（如 F-001）
+      pattern: "^F-[0-9]{3}$"
+
+    - name: tech_spec
+      type: file
+      required: true
+      description: 技术规格书路径（Markdown 格式）
+      path: workspace/outputs/tech-spec.md
+      format: markdown
+
+    - name: implementation_report
+      type: file
+      required: true
+      description: 实现报告路径
+      path: workspace/outputs/implementation-report.md
+      format: markdown
+
+    - name: target_services
+      type: array
+      required: true
+      description: 需要测试的目标服务列表
+      items:
+        type: object
+        properties:
+          name:
+            type: string
+            description: 服务名称
+          url:
+            type: string
+            description: 服务访问地址
+          layer:
+            type: string
+            enum: [facade, application, data]
+            description: 服务分层
+
+    - name: database_config
+      type: object
+      required: true
+      description: 数据库连接配置
+      properties:
+        host:
+          type: string
+          description: 数据库主机地址
+        port:
+          type: number
+          description: 数据库端口
+        database:
+          type: string
+          description: 数据库名称
+        username:
+          type: string
+          description: 用户名
+        password:
+          type: string
+          description: 密码
+
+    - name: nacos_config
+      type: object
+      required: true
+      description: Nacos 配置中心连接配置
+      properties:
+        server_addr:
+          type: string
+          description: Nacos 服务器地址
+        namespace:
+          type: string
+          description: 命名空间
+        username:
+          type: string
+          description: 用户名（可选）
+        password:
+          type: string
+          description: 密码（可选）
+
+    - name: database_schema
+      type: file
+      required: false
+      description: 数据库建表 SQL 文件
+      path: workspace/outputs/database/schema.sql
+      condition: 当 tech-spec 包含数据模型时
+
+    - name: test_data_sql
+      type: file
+      required: false
+      description: 测试数据 SQL 文件
+      path: workspace/outputs/database/test-data.sql
+      condition: 当 tech-spec 包含数据模型时
+
+  # 输出定义
+  outputs:
+    - name: test_cases
+      type: file
+      description: 生成的测试用例文件
+      path: workspace/outputs/testing/test-cases.yml
+      format: yaml
+
+    - name: test_plan
+      type: file
+      description: 测试执行计划
+      path: workspace/outputs/testing/test-plan.yml
+      format: yaml
+
+    - name: test_results
+      type: file
+      description: 测试结果详情
+      path: workspace/outputs/testing/test-results.json
+      format: json
+
+    - name: test_report
+      type: file
+      description: 完整测试报告
+      path: workspace/outputs/testing/test-report.md
+      format: markdown
+
+    - name: test_summary
+      type: file
+      description: 测试结果汇总（供后续流程使用）
+      path: workspace/outputs/testing/test-summary.yml
+      format: yaml
+
+  # 可信源定义
+  source_of_truth:
+    - name: test_cases
+      type: yaml
+      location: workspace/outputs/testing/test-cases.yml
+      description: |
+        测试用例的唯一可信源。包含：
+        - 接口测试场景定义
+        - 请求参数和预期响应
+        - 断言规则
+        - 测试优先级
+
+  # 级联更新规则
+  cascade_rules:
+    - trigger: tech_spec
+      effects: [test_cases, test_plan]
+      action: regenerate
+      description: tech-spec 变更时，重新生成测试用例和测试计划
+
+    - trigger: test_cases
+      effects: [test_plan]
+      action: regenerate
+      description: 测试用例变更时，重新生成测试计划
+
+    - trigger: fix_result
+      effects: [test_results, test_report]
+      action: rerun
+      description: 修复完成后，重新执行测试
+
+  # 外部产物引用规则（只读，不修改）
+  external_artifacts:
+    description: |
+      本流程引用的外部产物（来自 upstream workflow）。
+      这些产物以只读方式使用，本流程不会修改。
+    
+    references:
+      - name: tech_spec
+        source: feature-implementation
+        path: workspace/outputs/tech-spec.md
+        usage: read-only
+        description: 技术规格书（Markdown 格式），用于生成测试用例
+        
+      - name: database_schema
+        source: feature-implementation
+        path: workspace/outputs/database/schema.sql
+        usage: read-only
+        strategy: append-mode-reference
+        description: |
+          数据库建表 SQL，以追加模式引用。
+          本流程只读取，不修改。
+          如需修改，应通过 feature-implementation 流程。
+        
+      - name: test_data_sql
+        source: feature-implementation
+        path: workspace/outputs/database/test-data.sql
+        usage: read-only
+        strategy: append-mode-reference
+        description: |
+          测试数据 SQL，以追加模式引用。
+          本流程只读取，不修改。
+          如需修改，应通过 feature-implementation 流程。
+        
+      - name: implementation_report
+        source: feature-implementation
+        path: workspace/outputs/implementation-report.md
+        usage: read-only
+        description: 实现报告，用于了解实现详情
+    
+    constraints:
+      - rule: no_modification
+        description: 禁止修改外部产物
+        enforcement: strict
+        
+      - rule: version_awareness
+        description: |
+          使用外部产物时应检查版本：
+          1. 确认产物与当前测试的 Feature 版本匹配
+          2. 如版本不匹配，应提示用户更新
+          3. 支持通过 Program ID 定位特定版本
+
+  # 产物模板路径
+  templates:
+    test_cases: _TEMPLATE/test-cases.yml
+    test_plan: _TEMPLATE/test-plan.yml
+    test_report: _TEMPLATE/test-report.md
+    # 注意：tech-spec 格式为 Markdown，测试用例生成时需解析 Markdown 中的接口定义
+
+  # 执行约束
+  constraints:
+    require_environment_check: true      # 必须检查环境配置
+    require_test_cases: true             # 必须生成测试用例
+    require_pass_before_archive: true    # 测试通过后才能归档
+    p0_pass_rate: 100                    # P0 用例通过率要求
+    p1_pass_rate: 90                     # P1 用例通过率要求
+    max_retry_count: 3                   # 最大重试次数
+
+  # 元数据
+  metadata:
+    author: workflow-designer
+    created: "2026-03-15"
+    updated: "2026-03-15"
+    version: "1.0.0"
+    tags: [testing, api-testing, automation, http]
+    related_programs: []
+    upstream_workflow: feature-implementation

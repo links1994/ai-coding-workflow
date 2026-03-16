@@ -1,0 +1,185 @@
+# Feature 技术规格: {{feature_id}}
+
+## 1. Feature 基本信息
+
+```yaml
+feature:
+  id: {{feature_id}}
+  name: {{feature_name}}
+  domain: {{domain}}
+  module: {{module}}
+  priority: {{priority}}
+  description: {{description}}
+```
+
+## 2. 接口定义
+
+### 2.1 内部服务接口 (Feign)
+
+```yaml
+apis:
+  {{#each inner_apis}}
+  - name: {{name}}
+    path: {{path}}
+    method: {{method}}
+    request: {{request_class}}
+    response: {{response_class}}
+    description: {{description}}
+  {{/each}}
+```
+
+### 2.2 门面服务接口
+
+```yaml
+facade_apis:
+  {{#each facade_apis}}
+  - name: {{name}}
+    path: {{path}}
+    method: {{method}}
+    request: {{request_class}}
+    response: {{response_class}}
+    description: {{description}}
+  {{/each}}
+```
+
+## 3. 数据模型
+
+### 3.1 数据库表
+
+```yaml
+tables:
+  {{#each tables}}
+  - name: {{name}}
+    comment: {{comment}}
+    fields:
+      {{#each fields}}
+      - name: {{name}}
+        type: {{type}}
+        length: {{length}}
+        nullable: {{nullable}}
+        default: {{default}}
+        comment: {{comment}}
+      {{/each}}
+    indexes:
+      {{#each indexes}}
+      - name: {{name}}
+        fields: [{{fields}}]
+        type: {{type}}
+      {{/each}}
+  {{/each}}
+```
+
+## 4. 业务规则
+
+```yaml
+business_rules:
+  validations:
+    {{#each validations}}
+    - field: {{field}}
+      rule: {{rule}}
+      message: {{message}}
+    {{/each}}
+  
+  state_transitions:
+    {{#each state_transitions}}
+    - from: {{from_state}}
+      to: {{to_state}}
+      trigger: {{trigger}}
+      condition: {{condition}}
+    {{/each}}
+```
+
+## 4.1 调用时序图
+
+> 详见 [sequence-diagrams.md](./sequence-diagrams.md)
+
+| 序号 | 时序图名称 | 说明 |
+|------|-----------|------|
+| 1 | 查询类接口时序图 | 标准查询流程（门面→Feign→应用→Query→DB） |
+| 2 | 写操作接口时序图 | 标准写操作流程（含operatorId传递） |
+| 3 | 跨服务依赖时序图 | 如有跨服务调用则生成 |
+| 4 | 特定业务时序图 | 根据Feature实际场景补充 |
+
+```yaml
+sequence_diagrams:
+  {{#each sequence_diagrams}}
+  - name: {{name}}
+    description: {{description}}
+    type: {{type}}  # query/write/cross-service/custom
+  {{/each}}
+```
+
+## 5. 实现计划
+
+```yaml
+implementation:
+  layer_order: [{{layer_order}}]
+  files:
+    {{#each files}}
+    - path: {{path}}
+      type: {{type}}
+      service: {{service}}
+      layer: {{layer}}
+    {{/each}}
+```
+
+## 6. 验收标准
+
+```yaml
+acceptance_criteria:
+  functional:
+    {{#each functional_criteria}}
+    - id: {{id}}
+      description: {{description}}
+      validation_method: {{validation_method}}
+      status: pending
+    {{/each}}
+  
+  non_functional:
+    {{#each non_functional_criteria}}
+    - id: {{id}}
+      description: {{description}}
+      validation_method: {{validation_method}}
+      status: pending
+    {{/each}}
+  
+  code_quality:
+    - id: cq-01
+      description: 代码符合项目规范
+      validation_method: DoD检查卡
+      status: pending
+    - id: cq-02
+      description: 无严重级别问题
+      validation_method: quality-report审查
+      status: pending
+    - id: cq-03
+      description: 所有接口通过HTTP测试
+      validation_method: HTTP测试文件执行
+      status: pending
+
+## 7. 依赖与风险
+
+```yaml
+dependencies:
+  upstream:
+    {{#each upstream_dependencies}}
+    - feature_id: {{feature_id}}
+      type: {{type}}
+      description: {{description}}
+    {{/each}}
+  
+  downstream:
+    {{#each downstream_dependencies}}
+    - feature_id: {{feature_id}}
+      type: {{type}}
+      description: {{description}}
+    {{/each}}
+
+risks:
+  {{#each risks}}
+  - id: {{id}}
+    description: {{description}}
+    mitigation: {{mitigation}}
+    status: open
+  {{/each}}
+```

@@ -1,0 +1,109 @@
+program:
+  id: P-2026-001-F-009
+  name: F-009 Prompt管理与生成
+  status: completed
+  workflow: feature-implementation
+  workflow_version: 1.1.0
+  
+started_at: "2026-03-16"
+completed_at: "2026-03-16"
+
+phases:
+  research:
+    status: completed
+    completed_at: "2026-03-16"
+    steps:
+      load_feature: completed
+      load_architecture: completed
+      load_code_rules: completed
+      analyze_services: completed
+      analyze_existing_code: completed
+      analyze_clarification_needs: completed
+    outputs: [feature_definition, architecture_constraints, code_generation_standards, service_analysis, existing_code_context, clarification_checklist]
+    
+  decision:
+    status: completed
+    completed_at: "2026-03-16"
+    steps:
+      clarify_interfaces: completed
+      clarify_data_model: completed
+      clarify_business_rules: completed
+      determine_layer_order: completed
+      determine_code_strategy: completed
+    outputs: [clarified_interfaces, clarified_data_model, clarified_business_rules, layer_implementation_order, code_generation_strategy]
+    
+  plan:
+    status: completed
+    completed_at: "2026-03-16"
+    steps:
+      generate_tech_spec: completed
+      review_tech_spec: completed
+      confirm_tech_spec: completed
+      create_generation_plan: completed
+      analyze_tech_spec: completed
+      auto_check_analysis: completed
+      confirm_analysis_result: completed
+    outputs: [tech_spec_draft, tech_spec_review, tech_spec, generation_plan, tech_spec_analysis_report, auto_check_result, analysis_confirmed]
+
+  execute:
+    status: completed
+    started_at: "2026-03-16"
+    completed_at: "2026-03-16"
+    steps:
+      generate_database: completed
+      generate_feign_interfaces: completed
+      generate_application_layer: completed
+      generate_facade_layer: completed
+      generate_tests: completed
+      invoke_swagger_skill: pending
+    outputs: [database_schema, test_data_sql, feign_interfaces, application_layer_code, facade_layer_code, test_files]
+    
+  feedback:
+    status: completed
+    started_at: "2026-03-16"
+    completed_at: "2026-03-16"
+    steps:
+      review_code_quality: completed
+      fix_issues: completed
+    outputs: [code_quality_report]
+    
+  review:
+    status: completed
+    started_at: "2026-03-16"
+    completed_at: "2026-03-16"
+    steps:
+      validate_completeness: completed
+      generate_implementation_report: completed
+      archive_artifacts: pending
+    outputs: [implementation_report]
+
+outputs:
+  tech_spec: workspace/outputs/tech-spec.md
+  implementation_report: workspace/outputs/implementation-report.md
+  quality_report: workspace/outputs/quality-report.md
+  swagger_docs: outputs/swagger/
+
+archives:
+  - type: feature
+    path: knowledge/features/F-009-prompt-management.md
+    status: pending
+  - type: api
+    path: knowledge/apis/mall-agent-employee-service-api.md
+    status: pending
+  - type: swagger
+    path: outputs/swagger/mall-admin/PromptAdminController/
+    status: pending
+
+todos:
+  - id: todo-001
+    content: 调用 Swagger 文档生成 Skill
+    status: pending
+  - id: todo-002
+    content: 代码质量审查
+    status: pending
+  - id: todo-003
+    content: 生成实现报告
+    status: pending
+  - id: todo-004
+    content: 归档产物到知识库
+    status: pending

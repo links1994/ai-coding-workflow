@@ -1,0 +1,76 @@
+﻿# 资源索引 — 由 init.ps1 自动生成
+# 场景: dev-team
+
+repos:
+  mall-admin:
+    path: outputs/code/repos/mall-admin
+    git: git@codeup.aliyun.com:67fcf6f6c3ce52a957f138b7/aim-mall/mall-admin.git
+    desc: 管理后台门面服务
+    lang: Java
+    status: active
+  mall-agent-employee-service:
+    path: outputs/code/repos/mall-agent-employee-service
+    git: git@codeup.aliyun.com:67fcf6f6c3ce52a957f138b7/aim-mall/mall-agent-employee-service.git
+    desc: 智能体员工应用服务
+    lang: Java
+    status: active
+  mall-basic-service:
+    path: outputs/code/repos/mall-basic-service
+    git: git@codeup.aliyun.com:67fcf6f6c3ce52a957f138b7/aim-mall/mall-basic-service.git
+    desc: 基础公共服务
+    lang: Java
+    status: active
+  mall-client:
+    path: outputs/code/repos/mall-client
+    git: git@codeup.aliyun.com:67fcf6f6c3ce52a957f138b7/aim-mall/mall-client.git
+    desc: C端用户应用服务
+    lang: Java
+    status: active
+  mall-common:
+    path: outputs/code/repos/mall-common
+    git: git@codeup.aliyun.com:67fcf6f6c3ce52a957f138b7/aim-mall/mall-common.git
+    desc: 公共工具库
+    lang: Java
+    status: active
+  mall-inner-api:
+    path: outputs/code/repos/mall-inner-api
+    git: git@codeup.aliyun.com:67fcf6f6c3ce52a957f138b7/aim-mall/mall-inner-api.git
+    desc: 内部服务接口定义
+    lang: Java
+    status: active
+  mall-notice:
+    path: outputs/code/repos/mall-notice
+    git: git@codeup.aliyun.com:67fcf6f6c3ce52a957f138b7/aim-mall/mall-notice.git
+    desc: 消息通知应用服务
+    lang: Java
+    status: active
+  mall-product:
+    path: outputs/code/repos/mall-product
+    git: git@codeup.aliyun.com:67fcf6f6c3ce52a957f138b7/aim-mall/mall-product.git
+    desc: 商品中台应用服务
+    lang: Java
+    status: active
+  mall-promotion:
+    path: outputs/code/repos/mall-promotion
+    git: git@codeup.aliyun.com:67fcf6f6c3ce52a957f138b7/aim-mall/mall-promotion.git
+    desc: 营销促销应用服务
+    lang: Java
+    status: active
+  mall-swarm:
+    path: outputs/code/repos/mall-swarm
+    git: git@codeup.aliyun.com:67fcf6f6c3ce52a957f138b7/aim-mall/mall-swarm.git
+    desc: 服务编排聚合工程
+    lang: Java
+    status: active
+  mall-third:
+    path: outputs/code/repos/mall-third
+    git: git@codeup.aliyun.com:67fcf6f6c3ce52a957f138b7/aim-mall/mall-third.git
+    desc: 第三方集成服务
+    lang: Java
+    status: active
+  mall-toc-service:
+    path: outputs/code/repos/mall-toc-service
+    git: git@codeup.aliyun.com:67fcf6f6c3ce52a957f138b7/aim-mall/mall-toc-service.git
+    desc: APP端门面服务
+    lang: Java
+    status: active

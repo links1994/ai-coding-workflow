@@ -1,0 +1,119 @@
+# 知识库索引
+# 复盘沉淀的知识，支持智能激活和复用
+
+knowledge_base:
+  # Feature 文档索引
+  features:
+    - id: F-001
+      name: 岗位类型管理
+      file: knowledge/features/F-001-job-type-management.md
+      domain: 配置管理域
+      priority: P0
+      created_at: "2026-03-08"
+      status: completed
+
+  # Schema 文档索引
+  schemas:
+    - id: aim_agent_job_type
+      name: 岗位类型表
+      file: knowledge/schemas/aim_agent_job_type.md
+      service: mall-agent-employee-service
+      created_at: "2026-03-08"
+
+  # API 文档索引
+  apis:
+    - id: mall-agent-employee-service
+      name: 智能体员工应用服务
+      file: knowledge/apis/mall-agent-employee-service-api.md
+      layer: application
+      created_at: "2026-03-08"
+
+  # 经验条目
+  experiences:
+    - id: exp-001
+      title: 初始化方案设计经验
+      source: docs/output/architecture/init-architecture.md
+      created_at: "2026-03-15"
+      tags: [architecture, initialization, multi-scenario]
+      summary: "通过交互式脚本+场景模板+渐进配置实现低门槛上手"
+      activation_rules:
+        - trigger: "新 Program 涉及系统初始化"
+          keywords: ["初始化", "init", "setup", "配置"]
+          inject_to: context
+          priority: high
+        - trigger: "讨论架构方案选择"
+          keywords: ["架构", "方案", "对比", "选型"]
+          inject_to: context
+          priority: medium
+      usage_count: 0
+      last_used: null
+
+  # 模式库
+  patterns:
+    - id: pattern-scenario-config
+      title: 场景化配置模式
+      file: knowledge/patterns/scenario-config.md
+      created_at: "2026-03-15"
+      tags: [pattern, configuration, scenario]
+      summary: "通过检测使用场景(team/solo/oss)动态加载对应配置模板"
+      applicability:
+        - "需要适配多种使用场景的系统"
+        - "用户群体差异较大的工具"
+      usage_count: 0
+
+    - id: pattern-interactive-init
+      title: 交互式初始化模式
+      file: knowledge/patterns/interactive-init.md
+      created_at: "2026-03-15"
+      tags: [pattern, initialization, ux]
+      summary: "通过交互式脚本引导用户完成配置，降低使用门槛"
+      applicability:
+        - "配置项较多的系统"
+        - "面向非技术用户的工具"
+      usage_count: 0
+
+  # 决策记录 (Architecture Decision Records)
+  decisions:
+    - id: adr-001
+      title: 选择交互式初始化方案B
+      status: accepted
+      date: "2026-03-15"
+      context: |
+        需要为 AI Agent 编排系统设计初始化机制，
+        考虑三种方案：A-手动配置、B-交互脚本、C-多分支模板
+      decision: |
+        采用方案B：交互式初始化脚本 + 场景化模板 + 渐进式配置
+      consequences:
+        positive:
+          - 平衡易用性和维护成本
+          - 单一仓库管理，避免分叉
+          - 动态生成配置，灵活性高
+        negative:
+          - 需要维护初始化脚本
+          - 脚本本身需要测试
+      related_docs:
+        - docs/output/architecture/init-architecture.md
+
+  # 问题案例
+  cases: []
+
+# 知识激活配置
+activation:
+  min_relevance_score: 0.6
+  max_items_per_trigger: 3
+  inject_template: |
+    ## 相关知识
+    
+    根据当前任务，以下经验可能有用：
+    
+    {knowledge_items}
+    
+    ---
+
+# 使用统计跟踪
+statistics:
+  enabled: true
+  track_fields:
+    - usage_count
+    - last_used
+    - effectiveness_rating

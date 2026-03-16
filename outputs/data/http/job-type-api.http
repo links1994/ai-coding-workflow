@@ -1,0 +1,90 @@
+### ========================================================
+### 岗位类型管理 API 测试 (F-001)
+### 服务: mall-admin / mall-agent-employee-service
+### 生成时间: 2026-03-16
+### ========================================================
+
+### --------------------------------------------------------
+### Admin 门面接口
+### --------------------------------------------------------
+
+### 查询岗位类型列表（分页+关键词搜索）
+GET http://localhost:8080/admin/api/v1/job-types?keyword=客服&pageNo=1&pageSize=10
+X-User-Token: {{userToken}}
+
+### 新增岗位类型
+POST http://localhost:8080/admin/api/v1/job-types
+Content-Type: application/json
+X-User-Token: {{userToken}}
+
+{
+  "name": "测试岗位类型",
+  "description": "这是一个测试岗位描述"
+}
+
+### 编辑岗位类型
+PUT http://localhost:8080/admin/api/v1/job-types/1
+Content-Type: application/json
+X-User-Token: {{userToken}}
+
+{
+  "name": "客服专员（已更新）",
+  "description": "更新后的描述"
+}
+
+### 启用/禁用岗位类型
+PUT http://localhost:8080/admin/api/v1/job-types/1/status
+Content-Type: application/json
+X-User-Token: {{userToken}}
+
+{
+  "status": 0
+}
+
+### --------------------------------------------------------
+### Inner 内部服务接口
+### --------------------------------------------------------
+
+### 分页查询岗位类型列表
+POST http://localhost:8081/inner/api/v1/job-types/list
+Content-Type: application/json
+
+{
+  "pageNo": 1,
+  "pageSize": 10,
+  "keyword": ""
+}
+
+### 创建岗位类型
+POST http://localhost:8081/inner/api/v1/job-types/create
+Content-Type: application/json
+
+{
+  "name": "内部测试岗位",
+  "description": "内部接口创建",
+  "operatorId": 10001
+}
+
+### 更新岗位类型
+PUT http://localhost:8081/inner/api/v1/job-types/update
+Content-Type: application/json
+
+{
+  "id": 1,
+  "name": "更新后的岗位名称",
+  "description": "更新后的描述",
+  "operatorId": 10001
+}
+
+### 状态变更
+PUT http://localhost:8081/inner/api/v1/job-types/status
+Content-Type: application/json
+
+{
+  "id": 1,
+  "status": 1,
+  "operatorId": 10001
+}
+
+### 删除岗位类型
+DELETE http://localhost:8081/inner/api/v1/job-types/delete?id=5

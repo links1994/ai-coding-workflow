@@ -1,0 +1,110 @@
+### ========================================================
+### 人设风格管理 API 测试 (F-002)
+### 服务: mall-admin / mall-agent-employee-service
+### 生成时间: 2026-03-16
+### ========================================================
+
+### --------------------------------------------------------
+### Admin 门面接口
+### --------------------------------------------------------
+
+### 查询人设风格列表（全量）
+GET http://localhost:8080/admin/api/v1/style-configs
+X-User-Token: {{userToken}}
+
+### 新增人设风格
+POST http://localhost:8080/admin/api/v1/style-configs
+Content-Type: application/json
+X-User-Token: {{userToken}}
+
+{
+  "name": "测试新增风格",
+  "icon": "https://cdn.example.com/icons/test.png",
+  "description": "这是一个测试新增的风格描述",
+  "promptPreview": "您是一位测试风格的客服代表。"
+}
+
+### 编辑人设风格
+PUT http://localhost:8080/admin/api/v1/style-configs/1
+Content-Type: application/json
+X-User-Token: {{userToken}}
+
+{
+  "name": "专业严谨（已更新）",
+  "icon": "https://cdn.example.com/icons/professional-new.png",
+  "description": "更新后的描述",
+  "promptPreview": "更新后的Prompt预览"
+}
+
+### 禁用人设风格
+PUT http://localhost:8080/admin/api/v1/style-configs/1/status
+Content-Type: application/json
+X-User-Token: {{userToken}}
+
+{
+  "status": 0
+}
+
+### 启用人设风格
+PUT http://localhost:8080/admin/api/v1/style-configs/4/status
+Content-Type: application/json
+X-User-Token: {{userToken}}
+
+{
+  "status": 1
+}
+
+### 删除人设风格
+DELETE http://localhost:8080/admin/api/v1/style-configs/5
+X-User-Token: {{userToken}}
+
+### --------------------------------------------------------
+### Inner 内部服务接口
+### --------------------------------------------------------
+
+### 查询风格配置列表
+GET http://localhost:8081/inner/api/v1/style-configs/list
+
+### 创建风格配置
+POST http://localhost:8081/inner/api/v1/style-configs/create
+Content-Type: application/json
+
+{
+  "name": "内部测试风格",
+  "icon": "https://cdn.example.com/icons/internal.png",
+  "description": "内部接口创建的风格",
+  "promptPreview": "内部测试Prompt",
+  "operatorId": 10001
+}
+
+### 更新风格配置
+POST http://localhost:8081/inner/api/v1/style-configs/update
+Content-Type: application/json
+
+{
+  "id": 2,
+  "name": "亲切友好（内部更新）",
+  "icon": "https://cdn.example.com/icons/friendly-new.png",
+  "description": "内部接口更新的描述",
+  "promptPreview": "内部更新的Prompt",
+  "operatorId": 10001
+}
+
+### 删除风格配置（软删除）
+POST http://localhost:8081/inner/api/v1/style-configs/delete
+Content-Type: application/json
+
+{
+  "id": 3,
+  "operatorId": 10001
+}
+
+### 变更状态 - 禁用
+POST http://localhost:8081/inner/api/v1/style-configs/status
+Content-Type: application/json
+
+{
+  "id": 2,
+  "status": 0,
+  "operatorId": 10001
+}

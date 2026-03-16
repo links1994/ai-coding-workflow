@@ -1,0 +1,36 @@
+# 写入范围定义
+
+scope:
+  # 代码仓库
+  repos:
+    - name: mall-admin
+      path: outputs/code/repos/mall-admin
+      layers: [facade]
+      write: true
+      
+    - name: mall-agent-employee-service
+      path: outputs/code/repos/mall-agent-employee-service
+      layers: [application]
+      write: true
+      
+    - name: mall-inner-api
+      path: outputs/code/repos/mall-inner-api
+      layers: [api]
+      write: true
+
+  # 数据库脚本
+  database:
+    path: outputs/schemas
+    tables:
+      - aim_agent_style_config
+    write: true
+
+  # 文档输出
+  docs:
+    - path: outputs/PROGRAMS/P-2026-001-F-002/workspace/outputs
+      write: true
+
+  # 只读引用
+  readonly:
+    - path: inputs/products/ai-agent-platform-prd.md
+    - path: outputs/PROGRAMS/P-2026-003-ai-agent-decomposition/workspace/decomposition.md

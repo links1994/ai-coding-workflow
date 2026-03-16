@@ -1,0 +1,49 @@
+program:
+  id: P-2026-001-F-012
+  name: F-012 AI对话引擎
+  status: active
+  workflow: feature-implementation
+  feature_id: F-012
+  created_at: "2026-03-16"
+  updated_at: "2026-03-16"
+
+lifecycle:
+  current_phase: research
+  completed_phases: []
+  pending_phases:
+    - decision
+    - plan
+    - execute
+    - feedback
+    - review
+
+progress:
+  total_steps: 6
+  completed_steps: 6
+  current_step: clarify_interfaces
+
+blockers: []
+
+artifacts:
+  - path: workspace/outputs/system-interaction-sequence.md
+    description: 系统交互时序图、数据流转图、流程图
+
+notes:
+  - "feature-implementation工作流已启动"
+  - "当前阶段: decision - 澄清接口设计"
+  - "research阶段已完成"
+  - "职责边界明确(已确认):"
+  - "  - mall-ai: 接收C端/管理端请求、创建会话、保存消息、协调各服务"
+  - "  - F-012(agent服务): Prompt组装、员工数据准备"
+  - "  - conversation-history-service: 历史对话存储查询（可被mall-ai直接调用）"
+  - "  - AI服务: 话术匹配、知识库检索、调用大模型、SSE流式输出"
+  - "统一调用链(7步):"
+  - "  1. 前端(C端/管理端) -> mall-ai"
+  - "  2. mall-ai 创建会话"
+  - "  3. mall-ai -> F-012 获取提示词"
+  - "  4. mall-ai 查询历史对话"
+  - "  5. mall-ai -> AI服务 对话处理"
+  - "  6. AI服务 SSE 流式返回"
+  - "  7. mall-ai 返回前端"
+  - "已生成: system-interaction-sequence.md（时序图+数据流+流程图）"
+  - "已更新: 移除mall-admin，管理端直接请求mall-ai"

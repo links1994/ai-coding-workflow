@@ -1,0 +1,68 @@
+program:
+  id: P-2026-001-F-002
+  name: F-002 人设风格管理
+  status: completed
+  workflow: feature-implementation
+  
+started_at: "2026-03-08"
+completed_at: "2026-03-08"
+
+phases:
+  research:
+    status: completed
+    completed_at: "2026-03-08"
+    outputs:
+      - clarification_checklist
+  decision:
+    status: completed
+    completed_at: "2026-03-08"
+    outputs:
+      - clarified_interfaces
+      - clarified_data_model
+      - clarified_business_rules
+  plan:
+    status: completed
+    completed_at: "2026-03-08"
+    outputs:
+      - tech_spec
+      - auto_check_analysis
+      - confirm_analysis_result
+  execute:
+    status: completed
+    completed_at: "2026-03-08"
+    outputs:
+      - feign_interfaces
+      - application_layer_code
+      - facade_layer_code
+      - database_scripts
+      - test_files
+  feedback:
+    status: completed
+    completed_at: "2026-03-08"
+    outputs:
+      - code_quality_report
+  review:
+    status: completed
+    completed_at: "2026-03-08"
+    outputs:
+      - implementation_report
+
+outputs:
+  tech_spec: workspace/outputs/tech-spec.md
+  implementation_report: workspace/outputs/implementation-report.md
+  quality_report: workspace/outputs/quality-report.md
+
+archives:
+  - type: feature
+    path: knowledge/features/F-002-style-config-management.md
+    status: archived
+  - type: schema
+    path: knowledge/schemas/aim_agent_style_config.md
+    status: archived
+  - type: api
+    path: knowledge/apis/mall-agent-employee-service-api.md
+    status: archived
+
+todos:
+  - desc: 删除前员工引用数量校验
+    depends_on: F-006（员工申请与审核）

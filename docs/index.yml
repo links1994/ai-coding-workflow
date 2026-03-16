@@ -1,0 +1,50 @@
+# 文档索引
+# 统一管理所有输出文档的元数据、版本和状态
+
+documents:
+  # 架构设计文档
+  init-architecture:
+    type: architecture
+    title: AI Agent 编排系统初始化方案
+    description: 场景感知、交互引导、配置驱动的初始化机制设计
+    current: INIT-ARCHITECTURE.md
+    versions:
+      - version: "1.0.0"
+        file: docs/archive/init-architecture/v1.0.0-20260315.md
+        date: "2026-03-15"
+        changes: "初始版本"
+    status: stable
+    tags: [initialization, architecture, multi-scenario, team, solo, oss]
+    related_programs: []
+    authors: ["AI Architect"]
+
+# 文档类型定义
+types:
+  architecture:
+    name: 架构设计
+    description: 系统架构、技术方案、设计决策
+    review_required: true
+  api:
+    name: API 文档
+    description: 接口定义、使用说明
+    review_required: true
+  guides:
+    name: 指南文档
+    description: 使用指南、操作手册
+    review_required: false
+
+# 文档状态定义
+statuses:
+  draft: 草稿
+  review: 审核中
+  stable: 已发布
+  deprecated: 已废弃
+
+# 版本规范
+versioning:
+  scheme: semantic
+  format: "MAJOR.MINOR.PATCH"
+  rules:
+    - MAJOR: 重大架构变更
+    - MINOR: 功能增强
+    - PATCH: 错误修复

@@ -1,0 +1,339 @@
+### ========================================================
+### 智能员工管理 API 测试 (F-006/F-007/F-008/F-009)
+### 服务: mall-admin / mall-toc-service / mall-agent-employee-service
+### 生成时间: 2026-03-16
+### ========================================================
+
+### --------------------------------------------------------
+### Admin 门面接口 (F-006/F-008)
+### --------------------------------------------------------
+
+### 审核列表查询
+GET http://localhost:8080/admin/api/v1/employee-audits?auditStatus=0&pageNo=1&pageSize=10
+X-User-Token: {{userToken}}
+
+### 获取状态统计
+GET http://localhost:8080/admin/api/v1/employee-audits/status-count
+X-User-Token: {{userToken}}
+
+### 审核详情
+GET http://localhost:8080/admin/api/v1/employee-audits/3/detail
+X-User-Token: {{userToken}}
+
+### 审核通过
+POST http://localhost:8080/admin/api/v1/employee-audits/3/approve
+Content-Type: application/json
+X-User-Token: {{userToken}}
+
+{
+  "commissionRate": 10.00
+}
+
+### 审核驳回
+POST http://localhost:8080/admin/api/v1/employee-audits/5/reject
+Content-Type: application/json
+X-User-Token: {{userToken}}
+
+{
+  "rejectReason": "资料不完整，请补充相关证明"
+}
+
+### 员工列表查询 (F-008)
+GET http://localhost:8080/admin/api/v1/employees?employeeStatus=2&pageNo=1&pageSize=10
+X-User-Token: {{userToken}}
+
+### 员工详情
+GET http://localhost:8080/admin/api/v1/employees/1/detail
+X-User-Token: {{userToken}}
+
+### 强制离线
+POST http://localhost:8080/admin/api/v1/employees/1/force-offline
+Content-Type: application/json
+X-User-Token: {{userToken}}
+
+### 恢复上线
+POST http://localhost:8080/admin/api/v1/employees/4/resume
+Content-Type: application/json
+X-User-Token: {{userToken}}
+
+### 警告员工
+POST http://localhost:8080/admin/api/v1/employees/1/warn
+Content-Type: application/json
+X-User-Token: {{userToken}}
+
+{
+  "warnReason": "请规范服务用语"
+}
+
+### 封禁员工
+POST http://localhost:8080/admin/api/v1/employees/1/ban
+Content-Type: application/json
+X-User-Token: {{userToken}}
+
+{
+  "banReason": "违反平台规定"
+}
+
+### 更新佣金
+POST http://localhost:8080/admin/api/v1/employees/1/commission
+Content-Type: application/json
+X-User-Token: {{userToken}}
+
+{
+  "commissionRate": 15.00
+}
+
+### 获取员工Prompt预览 (F-009)
+GET http://localhost:8080/admin/api/v1/employees/1/prompt
+X-User-Token: {{userToken}}
+
+### 更新员工Prompt
+PUT http://localhost:8080/admin/api/v1/employees/1/prompt
+Content-Type: application/json
+X-User-Token: {{userToken}}
+
+{
+  "prompt": "您是AI智能导购平台的资深客服助手，以专业严谨的态度服务每一位客户。"
+}
+
+### 查询Prompt变量列表
+GET http://localhost:8080/admin/api/v1/prompt-vars
+X-User-Token: {{userToken}}
+
+### 更新Prompt变量
+PUT http://localhost:8080/admin/api/v1/prompt-vars/1
+Content-Type: application/json
+X-User-Token: {{userToken}}
+
+{
+  "varValue": "新版AI智能导购平台"
+}
+
+### 渲染Prompt预览
+POST http://localhost:8080/admin/api/v1/prompts/render-preview
+Content-Type: application/json
+X-User-Token: {{userToken}}
+
+{
+  "template": "您是{{PLATFORM_NAME}}的客服助手",
+  "variables": {
+    "PLATFORM_NAME": "AI智能导购平台"
+  }
+}
+
+### --------------------------------------------------------
+### App 门面接口 (F-006/F-007)
+### --------------------------------------------------------
+
+### 获取申请介绍
+GET http://localhost:8082/app/api/v1/ai-employee/intro
+Authorization: Bearer {{jwtToken}}
+
+### 提交申请
+POST http://localhost:8082/app/api/v1/ai-employee/apply
+Content-Type: application/json
+Authorization: Bearer {{jwtToken}}
+
+{
+  "jobTypeId": 1,
+  "spuCode": "SPU2024000001",
+  "styleConfigId": 1,
+  "socialLinks": ["https://weibo.com/user123"],
+  "screenshots": ["https://cdn.example.com/screenshot1.jpg"]
+}
+
+### 查询申请状态
+GET http://localhost:8082/app/api/v1/ai-employee/3/status
+Authorization: Bearer {{jwtToken}}
+
+### 查询我的员工列表
+GET http://localhost:8082/app/api/v1/ai-employee/list?pageNo=1&pageSize=10
+Authorization: Bearer {{jwtToken}}
+
+### 查询解锁进度 (F-007)
+GET http://localhost:8082/app/api/v1/ai-employee/2/unlock-progress
+Authorization: Bearer {{jwtToken}}
+
+### 分享邀请链接
+POST http://localhost:8082/app/api/v1/ai-employee/2/share
+Content-Type: application/json
+Authorization: Bearer {{jwtToken}}
+
+### 落地页详情查询（无需登录）
+GET http://localhost:8082/app/api/v1/ai-employee/unlock-detail?inviteCode=aB3x9K
+
+### 帮助好友助力解锁
+POST http://localhost:8082/app/api/v1/ai-employee/help-unlock
+Content-Type: application/json
+Authorization: Bearer {{jwtToken}}
+
+{
+  "inviteCode": "aB3x9K"
+}
+
+### 员工详情（用户端）
+GET http://localhost:8082/app/api/v1/ai-employee/1/detail
+Authorization: Bearer {{jwtToken}}
+
+### 用户主动下线
+POST http://localhost:8082/app/api/v1/ai-employee/1/offline
+Content-Type: application/json
+Authorization: Bearer {{jwtToken}}
+
+### 获取员工Prompt预览 (F-009)
+GET http://localhost:8082/app/api/v1/ai-employee/1/prompt
+Authorization: Bearer {{jwtToken}}
+
+### --------------------------------------------------------
+### Inner 内部服务接口
+### --------------------------------------------------------
+
+### 创建智能员工
+POST http://localhost:8081/inner/api/v1/ai-employee/create
+Content-Type: application/json
+
+{
+  "userId": 10001,
+  "jobTypeId": 1,
+  "spuCode": "SPU2024000001",
+  "styleConfigId": 1,
+  "socialLinks": ["https://weibo.com/user123"],
+  "screenshots": ["https://cdn.example.com/screenshot1.jpg"]
+}
+
+### 重新申请
+POST http://localhost:8081/inner/api/v1/ai-employee/re-apply
+Content-Type: application/json
+
+{
+  "employeeId": 5,
+  "socialLinks": ["https://weibo.com/user456"],
+  "screenshots": ["https://cdn.example.com/screenshot4.jpg"]
+}
+
+### 获取员工详情
+GET http://localhost:8081/inner/api/v1/ai-employee/detail?employeeId=1
+
+### 按用户查询列表
+POST http://localhost:8081/inner/api/v1/ai-employee/list-by-user
+Content-Type: application/json
+
+{
+  "userId": 10001,
+  "pageNo": 1,
+  "pageSize": 10
+}
+
+### 查询待审核列表
+POST http://localhost:8081/inner/api/v1/ai-employee/list-for-audit
+Content-Type: application/json
+
+{
+  "auditStatus": 0,
+  "pageNo": 1,
+  "pageSize": 10
+}
+
+### 获取审核状态统计
+GET http://localhost:8081/inner/api/v1/ai-employee/audit-status-count
+
+### 审核通过
+POST http://localhost:8081/inner/api/v1/ai-employee/approve
+Content-Type: application/json
+
+{
+  "employeeId": 3,
+  "commissionRate": 10.00,
+  "operatorId": 10001
+}
+
+### 审核驳回
+POST http://localhost:8081/inner/api/v1/ai-employee/reject
+Content-Type: application/json
+
+{
+  "employeeId": 5,
+  "rejectReason": "资料不完整",
+  "operatorId": 10001
+}
+
+### 查询解锁进度 (F-007)
+GET http://localhost:8081/inner/api/v1/activation/progress?employeeId=2&userId=10001
+
+### 获取邀请码
+GET http://localhost:8081/inner/api/v1/activation/invite-code?employeeId=2
+
+### 获取解锁详情（落地页）
+GET http://localhost:8081/inner/api/v1/activation/unlock-detail?inviteCode=aB3x9K
+
+### 帮助解锁
+POST http://localhost:8081/inner/api/v1/activation/help-unlock
+Content-Type: application/json
+
+{
+  "inviteCode": "aB3x9K",
+  "helperUserId": 20006
+}
+
+### 激活记录列表
+POST http://localhost:8081/inner/api/v1/activation/records
+Content-Type: application/json
+
+{
+  "employeeId": 2,
+  "pageNo": 1,
+  "pageSize": 10
+}
+
+### 生成员工Prompt (F-009)
+POST http://localhost:8081/inner/api/v1/ai-employee/generate-prompt
+Content-Type: application/json
+
+{
+  "employeeId": 1
+}
+
+### 根据员工ID获取Prompt
+GET http://localhost:8081/inner/api/v1/ai-employee/1/prompt
+
+### 更新Prompt
+POST http://localhost:8081/inner/api/v1/ai-employee/prompt
+Content-Type: application/json
+
+{
+  "employeeId": 1,
+  "prompt": "更新后的Prompt内容",
+  "operatorId": 10001
+}
+
+### 查询变量列表
+GET http://localhost:8081/inner/api/v1/prompt-vars/list
+
+### 更新变量
+POST http://localhost:8081/inner/api/v1/prompt-vars/update
+Content-Type: application/json
+
+{
+  "varId": 1,
+  "varValue": "新版平台名称",
+  "operatorId": 10001
+}
+
+### 提取变量
+POST http://localhost:8081/inner/api/v1/prompts/extract-vars
+Content-Type: application/json
+
+{
+  "template": "您是{{PLATFORM_NAME}}的{{ROLE}}助手"
+}
+
+### 渲染预览
+POST http://localhost:8081/inner/api/v1/prompts/render-preview
+Content-Type: application/json
+
+{
+  "template": "您是{{PLATFORM_NAME}}的客服助手",
+  "variables": {
+    "PLATFORM_NAME": "AI智能导购平台"
+  }
+}

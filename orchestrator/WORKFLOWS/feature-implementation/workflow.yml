@@ -1,0 +1,699 @@
+workflow:
+  name: feature-implementation
+  description: Feature 实现流程 - 将需求拆分产物中的 Feature 通过人工澄清生成结构化技术规格，经分析确认后转化为可交付代码
+  version: 1.2.0
+  type: development
+
+  # 六阶段生命周期配置
+  lifecycle:
+    research:
+      enabled: true
+      description: 解析 Feature 定义，加载代码规范，分析现有代码
+      steps:
+        - id: load_feature
+          name: 加载 Feature 定义
+          action: load_feature
+          inputs: [feature_id, decomposition_report]
+          outputs: [feature_definition]
+          description: 从 decomposition.md 中提取指定 Feature 的完整定义
+          
+        - id: load_architecture
+          name: 加载架构规则
+          action: load_rules
+          inputs: [architecture_rules]
+          outputs: [architecture_constraints]
+          description: 加载服务分层架构规范
+          
+        - id: load_code_rules
+          name: 加载代码生成规范
+          action: load_rules
+          inputs: [code_generation_rules]
+          outputs: [code_generation_standards]
+          description: 加载门面服务/应用服务/Feign接口生成规范
+          
+        - id: analyze_services
+          name: 分析目标服务
+          action: analyze
+          inputs: [feature_definition, target_services]
+          outputs: [service_analysis]
+          description: 分析涉及的服务分层（facade/application/data）及接口依赖
+          
+        - id: analyze_existing_code
+          name: 分析现有代码
+          action: scan
+          inputs: [target_services]
+          outputs: [existing_code_context]
+          description: 扫描目标服务现有代码结构，识别可复用组件
+          
+        - id: analyze_clarification_needs
+          name: 分析需澄清项
+          action: analyze
+          inputs: [feature_definition, service_analysis]
+          outputs: [clarification_checklist]
+          description: 识别 Feature 定义中模糊、不确定需要人工澄清的项
+          
+    decision:
+      enabled: true
+      description: 通过人工澄清生成结构化技术规格
+      steps:
+        - id: clarify_interfaces
+          name: 澄清接口设计
+          action: clarify
+          inputs: [feature_definition, clarification_checklist, code_generation_standards]
+          outputs: [interface_answers]
+          description: |
+            与用户澄清接口设计相关问题：
+            - 该 Feature 需要哪些接口？（创建、更新、删除、查询详情、分页查询）
+            - 每个接口的 URL 路径命名规范
+            - 查询类接口的筛选条件字段
+            - 分页查询的默认页大小
+            
+            提问完成后询问："关于接口设计，是否还有其他需要确认的问题？"
+          require_confirmation: true
+
+        - id: clarify_data_model
+          name: 澄清数据模型
+          action: clarify
+          inputs: [feature_definition, interface_answers, code_generation_standards]
+          outputs: [data_model_answers]
+          description: |
+            与用户澄清数据模型相关问题：
+            - 需要新建的表及表名命名
+            - 字段定义、类型、约束
+            - 字段英文命名
+            - 枚举类型及枚举值
+            - 与现有表的关联关系
+            
+            提问完成后询问："关于数据模型，是否还有其他需要确认的问题？"
+          require_confirmation: true
+
+        - id: clarify_business_rules
+          name: 澄清业务规则
+          action: clarify
+          inputs: [feature_definition, data_model_answers, code_generation_standards]
+          outputs: [business_rule_answers]
+          description: |
+            与用户澄清业务规则相关问题：
+            - 业务状态及状态流转规则
+            - 创建/更新时的校验规则
+            - 删除时的依赖检查
+            - 复杂查询或聚合计算需求
+            - 消息通知或事件发送需求
+            
+            提问完成后询问："关于业务规则，是否还有其他需要确认的问题？"
+          require_confirmation: true
+
+        - id: consolidate_clarification_answers
+          name: 汇总澄清答案
+          action: generate
+          inputs:
+            - interface_answers
+            - data_model_answers
+            - business_rule_answers
+          outputs: [clarified_interfaces, clarified_data_model, clarified_business_rules, answers_md]
+          description: |
+            汇总所有澄清答案，生成：
+            1. 结构化澄清结果（clarified_interfaces, clarified_data_model, clarified_business_rules）
+            2. 写入 workspace/answers.md 供后续参考
+
+        - id: generate_decisions
+          name: 生成技术决策记录
+          action: generate
+          inputs: [answers_md, feature_definition]
+          outputs: [decisions_md]
+          description: |
+            基于澄清答案提炼关键技术决策，写入 workspace/decisions.md（ADR 格式）。
+            记录重要的架构选择、设计模式、约束决策等。
+
+        - id: confirm_clarification_complete
+          name: 确认澄清完成
+          action: confirm
+          inputs: [answers_md, decisions_md, clarification_checklist]
+          outputs: [clarification_confirmed]
+          description: |
+            展示澄清结果摘要，执行需求澄清完结检查：
+            - [ ] 所有 High 优先级问题已得到确认
+            - [ ] 技术决策已记录在 decisions.md
+            - [ ] 模糊点已消除，可以进入技术设计
+            - [ ] answers.md 内容完整
+            
+            询问："需求澄清阶段已完成，是否还有其他需要补充或确认的内容？"
+          require_confirmation: true
+            
+        - id: determine_layer_order
+          name: 确定分层实现顺序
+          action: decide
+          inputs: [clarified_interfaces, service_analysis]
+          outputs: [layer_implementation_order]
+          decisions:
+            - 先生成 data 层（基础数据服务）vs 先生成 application 层
+            - facade 层最后生成（依赖 inner-api 接口）
+            - 多层依赖时的并行/串行策略
+            
+        - id: determine_code_strategy
+          name: 确定代码生成策略
+          action: decide
+          inputs: [feature_definition, existing_code_context]
+          outputs: [code_generation_strategy]
+          decisions:
+            - 全新生成 vs 增量修改
+            - 复用现有组件 vs 新建组件
+            - 数据库表是否需要新建
+            
+    plan:
+      enabled: true
+      description: 生成结构化技术规格文档（tech-spec.md），分析确认规格完整性和可实现性
+      agent: spec-generator
+      steps:
+        - id: generate_tech_spec
+          name: 生成技术规格文档
+          action: generate
+          inputs: 
+            - clarified_interfaces
+            - clarified_data_model
+            - clarified_business_rules
+            - layer_implementation_order
+            - code_generation_strategy
+            - code_generation_standards
+          outputs: [tech_spec_draft]
+          description: |
+            生成技术规格书草稿（tech-spec-draft.md）。
+            执行方式：委托 spec-generator Agent 执行，或用户说"生成技术规格书"时触发。
+            依赖 Skill：tech-spec-generation
+            
+            生成的 tech-spec.md 包含以下内容：
+            1. Feature 基本信息
+            2. 接口定义（内部接口 + 门面接口）
+            3. 数据模型（表结构、字段、索引）
+            4. 业务规则（校验、状态流转）
+            5. 调用时序图（Mermaid 格式，内嵌在文档中）
+               - 查询类接口时序图
+               - 写操作接口时序图
+               - 跨服务依赖时序图（如有）
+               - 特定业务时序图
+            6. 业务流程图（Mermaid 格式，内嵌在文档中）
+            7. 实现计划
+            
+        - id: confirm_tech_spec_draft
+          name: 确认技术规格草稿
+          action: confirm
+          inputs: [tech_spec_draft]
+          outputs: [draft_confirmed]
+          description: |
+            展示技术规格书草稿，等待用户确认。
+            包含：接口定义、数据模型、业务规则、时序图、业务流程图。
+            
+            询问："技术规格书草稿已生成，是否还有其他需要补充或调整的内容？"
+          require_confirmation: true
+          
+        - id: analyze_tech_spec
+          name: 分析技术规格书
+          action: analyze
+          inputs: 
+            - tech_spec_draft
+            - code_generation_standards
+          outputs: [tech_spec_analysis_report]
+          description: |
+            分析 tech-spec 的完整性、准确性和可实现性。
+            依赖 Skill：tech-spec-analyzer
+            检查维度：
+            - 完整性：所有必需章节是否齐全
+            - 接口定义：路径、方法、参数、响应是否符合规范
+            - 数据模型：表结构、字段、索引是否完整
+            - 业务规则：校验、状态流转是否清晰
+            - 规范合规性：是否符合代码生成约束（12-spec-generation-constraints.md）
+            - 可实现性：技术可行性、依赖清晰度
+            输出：分析报告，标记阻塞/警告/提示级别问题
+            
+        - id: confirm_analysis_result
+          name: 确认分析结果
+          action: confirm
+          inputs: 
+            - tech_spec_analysis_report
+            - tech_spec_draft
+          outputs: [analysis_confirmed, tech_spec]
+          source_of_truth: true
+          description: |
+            展示分析结果，等待用户确认是否进入代码生成阶段：
+            - 查看分析报告中的阻塞/警告/提示问题
+            - 确认无阻塞问题：进入代码生成阶段
+            - 确认有阻塞问题：返回 plan 阶段修复 tech-spec
+            - 忽略警告问题（可选）：强制进入代码生成阶段
+            
+            询问："技术规格分析已完成，是否还有其他需要确认的问题？"
+          require_confirmation: true
+          
+        - id: create_generation_plan
+          name: 创建代码生成计划
+          action: plan
+          inputs: [tech_spec, layer_implementation_order]
+          outputs: [generation_plan]
+          description: 基于 tech-spec 制定代码生成计划
+          
+    execute:
+      enabled: true
+      description: 基于 tech-spec 生成代码, 委托 code-generator Agent 执行
+      agent: code-generator
+      steps:
+        - id: generate_database
+          name: 生成数据库结构
+          action: generate
+          inputs: [tech_spec, generation_plan]
+          outputs: [database_schema, test_data_sql]
+          condition: 当 tech-spec 包含数据模型时
+          description: 生成建表 SQL、测试数据 SQL 和 Entity/DO 类
+          
+        - id: generate_feign_interfaces
+          name: 生成 Feign 接口
+          action: generate
+          inputs: [tech_spec, generation_plan]
+          outputs: [feign_interfaces]
+          description: 基于 tech-spec 接口定义生成 mall-inner-api 代码
+          
+        - id: generate_application_layer
+          name: 生成应用服务层
+          action: generate
+          inputs: [tech_spec, generation_plan, feign_interfaces, database_schema]
+          outputs: [application_layer_code]
+          description: 基于 tech-spec 生成应用服务层代码（依赖数据库结构）
+          
+        - id: generate_facade_layer
+          name: 生成门面服务层
+          action: generate
+          inputs: [tech_spec, generation_plan, feign_interfaces]
+          outputs: [facade_layer_code]
+          description: 基于 tech-spec 生成门面服务层代码
+          
+        - id: generate_tests
+          name: 生成 HTTP 测试文件
+          action: generate
+          inputs: [tech_spec, facade_layer_code, database_schema, test_data_sql]
+          outputs: [test_files]
+          output_path: outputs/data/http/
+          naming_rule: 按功能模块命名，如 job-type-api.http
+          description: |
+            基于 tech-spec 生成 HTTP 测试文件。
+            输出路径：outputs/data/http/{module}-api.http
+            命名规则：按功能模块命名，后续迭代直接修改旧文件
+          
+        - id: confirm_code_generation
+          name: 确认代码生成完成
+          action: confirm
+          inputs: [application_layer_code, facade_layer_code, feign_interfaces, database_schema]
+          outputs: [code_generation_confirmed]
+          description: |
+            展示生成的代码文件清单，等待用户确认。
+            
+            询问："代码生成已完成，是否还有其他需要调整或补充的内容？"
+          require_confirmation: true
+          
+        - id: invoke_swagger_skill
+          name: 调用 Swagger 文档生成 Skill
+          action: invoke_skill
+          skill: swagger-doc-generation
+          inputs: [tech_spec, facade_layer_code, application_layer_code, program_id]
+          outputs: [swagger_docs]
+          condition: 当 Program 涉及门面服务 Controller 变更时
+          description: |
+            委托 swagger-doc-generation Skill 生成 API 文档。
+            输出路径：swagger/{service-name}/{ControllerName}/{中文功能描述}-{ControllerName}Api.md
+            支持增量更新，保留未变更接口内容。
+          
+    feedback:
+      enabled: true
+      description: 代码审查与修正
+      steps:
+        - id: review_code_quality
+          name: 代码质量审查
+          action: review
+          inputs: 
+            - tech_spec
+            - application_layer_code
+            - facade_layer_code
+          outputs: [code_quality_report]
+          description: 对照 tech-spec（内含时序图）检查代码是否符合规范
+          
+        - id: fix_issues
+          name: 修复问题
+          action: fix
+          inputs: [tech_spec, code_quality_report]
+          outputs: [fixed_code]
+          condition: 当审查发现问题时
+          description: 根据审查报告修复代码问题，确保与 tech-spec 一致
+          
+    review:
+      enabled: true
+      description: 完整性验证与产物归档
+      steps:
+        - id: validate_completeness
+          name: 验证功能完整性
+          action: validate
+          inputs: 
+            - tech_spec
+            - application_layer_code
+            - facade_layer_code
+          outputs: [completeness_check]
+          description: 验证生成的代码是否完整实现 tech-spec（内含时序图）定义
+          
+        - id: generate_implementation_report
+          name: 生成实现报告
+          action: generate
+          inputs: 
+            - tech_spec
+            - application_layer_code
+            - facade_layer_code
+            - feign_interfaces
+            - test_files
+            - database_schema
+            - test_data_sql
+            - code_quality_report
+            - completeness_check
+            - swagger_docs
+          outputs: [implementation_report]
+          description: 整合所有产物生成最终的实现报告
+          
+        - id: confirm_artifacts
+          name: 确认产物归档
+          action: confirm
+          inputs: [implementation_report, tech_spec, application_layer_code, facade_layer_code]
+          outputs: [artifacts_confirmed]
+          description: |
+            展示所有生成的产物清单，等待用户最终确认：
+            - 技术规格书（tech-spec.md）
+            - 实现报告
+            - 生成的代码文件
+            - 数据库脚本
+            - 测试文件
+            - Swagger 文档
+            
+            询问："所有产物已生成，是否确认归档到知识库？是否还有其他需要确认的内容？"
+          require_confirmation: true
+          
+        - id: archive_artifacts
+          name: 归档产物
+          action: archive
+          inputs:
+            - tech_spec
+            - implementation_report
+            - application_layer_code
+            - facade_layer_code
+            - feign_interfaces
+            - database_schema
+            - test_files
+            - swagger_docs
+          outputs: [archived_program]
+          description: |
+            归档所有产物到知识库（knowledge/）：
+            1. Feature 文档 → knowledge/features/{feature_id}.md
+            2. Schema 文档 → knowledge/schemas/{table_name}.md
+            3. API 文档 → knowledge/apis/{service_name}-api.md
+            4. Swagger 文档 → knowledge/swagger/{service-name}/{ControllerName}/
+            5. 更新 Program 状态为 "已完成"
+
+            归档规则：
+            - Feature 文档：追加模式，同一 Feature 多次实现合并版本历史
+            - Schema 文档：追加模式，表结构变更追加到文档末尾
+            - API 文档：覆盖模式，每次重新生成
+            - Swagger 文档：增量更新模式，保留未变更接口内容
+
+  # 输入定义
+  inputs:
+    - name: feature_id
+      type: string
+      required: true
+      description: 要实现的 Feature ID（如 F-001），从 decomposition.md 中引用
+      pattern: "^F-[0-9]{3}$"
+      
+    - name: decomposition_report
+      type: file
+      required: true
+      description: 需求拆分报告路径，包含 Feature 定义的参考源（非可信源）
+      path: workspace/inputs/decomposition.md
+      format: markdown
+      
+    - name: target_services
+      type: array
+      required: true
+      description: 涉及的服务列表（从 Feature 定义中提取或手动指定）
+      items:
+        type: object
+        properties:
+          name:
+            type: string
+            description: 服务名称
+          layer:
+            type: string
+            enum: [facade, application, data]
+            description: 服务分层
+          
+    - name: code_generation_rules
+      type: rule
+      required: true
+      description: 代码生成规范集合，定义门面服务/应用服务/Feign接口生成规则
+      path: .qoder/rules/code-generation/
+      pattern: "*.md"
+      load_order:
+        - 01-facade-service.md
+        - 02-inner-service.md
+        - 03-feign-interface.md
+      auto_load: true
+      
+    - name: architecture_rules
+      type: rule
+      required: true
+      description: 服务分层架构规则
+      path: .qoder/rules/req-decomposition/
+      pattern: "02-service-layering.md"
+      auto_load: true
+      
+    - name: existing_code_path
+      type: string
+      required: false
+      description: 现有代码根目录路径，用于扫描可复用组件
+      default: ""
+      
+    - name: output_base_path
+      type: string
+      required: false
+      description: 代码输出基础路径
+      default: "workspace/outputs/"
+      
+    - name: clarification_mode
+      type: string
+      required: false
+      description: 澄清模式（interactive/assumed）
+      enum: [interactive, assumed]
+      default: "interactive"
+      description_detail: |
+        interactive: 对每个澄清项都与开发人员交互确认
+        assumed: 基于规则自动推断，减少交互（仅用于熟悉场景）
+
+  # 输出定义
+  outputs:
+    - name: tech_spec
+      type: file
+      description: 技术规格文档（代码生成的唯一可信源，Markdown 格式）
+      path: workspace/outputs/tech-spec.md
+      format: markdown
+      sections:
+        - feature_info
+        - api_definitions
+        - data_model
+        - business_rules
+        - sequence_diagrams
+        - business_flow_charts
+        - implementation_plan
+        
+    - name: generated_code
+      type: directory
+      description: 生成的代码目录
+      path: "{{output_base_path}}/generated/"
+      structure:
+        - mall-inner-api/
+        - mall-agent-employee-service/
+        - mall-admin/
+        - mall-toc-service/
+        
+    - name: database_scripts
+      type: file
+      description: 数据库脚本（包含建表和测试数据）
+      path: outputs/data/sql/
+      files:
+        - {table_name}.sql          # 按表名命名，如 aim_agent_job_type.sql
+      naming_rule: 以数据库表名命名，包含建表语句和测试数据
+      condition: 当 tech-spec 包含数据模型时
+      versioning: append          # 追加模式，同一表追加测试数据
+      
+    - name: implementation_report
+      type: file
+      description: 实现报告（整合摘要）
+      path: workspace/outputs/implementation-report.md
+      format: markdown
+      sections:
+        - Feature 定义摘要
+        - 技术规格概览
+        - 生成文件清单
+        - 代码审查结果
+        - 完整性验证
+        
+    - name: swagger_docs
+      type: directory
+      description: Swagger API 文档目录（Markdown 格式，按 Controller 隔离）
+      path: workspace/outputs/swagger/
+      structure:
+        - mall-admin/
+          - {ControllerName}/
+            - {中文功能描述}-{ControllerName}Api.md
+        - mall-toc-service/
+          - {ControllerName}/
+            - {中文功能描述}-{ControllerName}Api.md
+        - mall-agent-employee-service/
+          - {ControllerName}/
+            - {中文功能描述}-{ControllerName}Api.md
+
+  # 可信源定义
+  source_of_truth:
+    - name: tech_spec
+      type: markdown
+      location: workspace/outputs/tech-spec.md
+      description: |
+        代码生成的唯一可信源。包含：
+        - 接口定义（路径、方法、参数、响应）
+        - 数据模型（表结构、字段、关联）
+        - 业务规则（校验、状态流转）
+        - 调用时序图（Mermaid 格式，内嵌在文档中）
+        - 业务流程图（Mermaid 格式，内嵌在文档中）
+        - 实现计划（分层、依赖）
+        所有代码必须严格遵循 tech-spec 定义，确保多次生成结果一致。
+      
+    - name: decomposition_report
+      type: markdown
+      location: workspace/inputs/decomposition.md
+      description: |
+        Feature 定义的参考源（非可信源）。仅用于初始理解和澄清阶段的参考，
+        不直接用于代码生成。所有不确定的项必须通过澄清阶段明确到 tech-spec 中。
+
+  # 级联更新规则
+  cascade_rules:
+    - trigger: tech_spec
+      effects: [all_generated_code, database_scripts, swagger_docs]
+      action: regenerate
+      description: tech-spec 变更时，重新生成所有代码、数据库脚本和 Swagger 文档
+
+    - trigger: decomposition_report
+      effects: [clarification_checklist]
+      action: review
+      description: Feature 定义变更时，审查是否需要更新 tech-spec
+      condition: 当 Feature 的核心定义发生变更时
+
+    - trigger: code_generation_rules
+      effects: [all_generated_code]
+      action: review_and_update
+      description: 代码生成规范变更时，审查并更新所有生成的代码
+      condition: 当规则变更影响现有代码时
+
+  # 产物版本控制规则（针对共享文件）
+  artifact_versioning:
+    description: |
+      当多个流程共享同一文件时，使用版本控制避免覆盖。
+      版本格式：{filename}.{timestamp}.{program_id}
+      最新版本始终通过符号链接或元数据指向。
+    
+    shared_artifacts:
+      - name: database_scripts
+        path: outputs/data/sql/{table_name}.sql
+        versioning: true
+        strategy: append
+        description: |
+          数据库 SQL 脚本，按表名命名，支持追加模式。
+          新 Feature 使用已有表时，测试数据追加到对应文件末尾。
+          新表则创建新的 SQL 文件。
+          每个变更块前添加注释：-- [Program-ID] YYYY-MM-DD
+        
+      - name: http_test_files
+        path: outputs/data/http/{module}-api.http
+        versioning: true
+        strategy: append
+        description: |
+          HTTP 测试文件，按功能模块命名，支持追加模式。
+          同一功能模块新增接口时，追加到现有文件末尾。
+          每个接口组前添加注释：### [Program-ID] {功能描述}
+        
+      - name: tech_spec
+        path: workspace/outputs/tech-spec.md
+        versioning: false
+        description: |
+          技术规格书为当前 Program 独有，不涉及共享。
+          但可通过 upstream_workflow 引用其他 Program 的 tech-spec。
+
+      # 注意：时序图已内嵌在 tech-spec.md 中，不再单独维护 sequence-diagrams.md
+    
+    versioning_rules:
+      - rule: append_mode
+        description: |
+          追加模式适用于数据库脚本：
+          1. 读取现有文件内容
+          2. 在文件末尾添加新内容
+          3. 新内容前添加来源注释
+          4. 保留所有历史内容
+        
+      - rule: overwrite_mode
+        description: |
+          覆盖模式适用于独立产物：
+          1. 直接覆盖文件
+          2. 旧版本通过 Git 历史保留
+          3. 适用于 tech-spec, implementation_report 等
+        
+      - rule: reference_mode
+        description: |
+          引用模式适用于跨 Program 共享：
+          1. 不直接修改共享文件
+          2. 通过路径引用其他 Program 的产物
+          3. 适用于测试流程引用代码流程的数据库脚本
+
+  # 产物模板路径
+  templates:
+    tech_spec: _TEMPLATE/tech-spec.md
+    implementation_report: _TEMPLATE/implementation-report.md
+
+  # 流程设计参考文档
+  design_guides:
+    description: |
+      以下文档为流程设计阶段提供参考指导，帮助创建 Rules、Skills 和 Agents。
+      这些指南位于 docs/guides/ 目录，供 workflow-designer 在流程设计阶段参考。
+    guides:
+      - name: rule-creation-guide
+        path: docs/guides/rule-creation-guide.md
+        description: 规则创建指南，指导如何创建项目规范
+        
+      - name: skill-creation-guide
+        path: docs/guides/skill-creation-guide.md
+        description: Skill 创建指南，指导如何创建可复用技能模块
+        
+      - name: agent-creation-guide
+        path: docs/guides/agent-creation-guide.md
+        description: Agent 创建指南，指导如何创建自定义智能体
+
+  # 执行约束
+  constraints:
+    require_tech_spec_confirmation: true  # 必须确认 tech-spec 后才能生成代码
+    require_clarification: true           # 必须通过澄清阶段
+    feign_first: true                     # Feign 接口必须先生成
+    facade_last: true                     # 门面服务必须最后生成
+    require_code_review: true             # 要求代码审查
+    idempotent_generation: true           # 基于相同 tech-spec 多次生成结果一致
+
+  # 产物模板路径
+  templates:
+    tech_spec: _TEMPLATE/tech-spec.yml
+    implementation_report: _TEMPLATE/implementation-report.md
+
+  # 元数据
+  metadata:
+    author: workflow-designer
+    created: "2026-03-15"
+    updated: "2026-03-16"
+    version: "1.2.0"
+    tags: [feature, implementation, code-generation, tech-spec, clarification, swagger]
+    related_programs: []
+    upstream_workflow: req-decomposition

@@ -1,0 +1,78 @@
+# 工作流定义模板
+# 基于"调研-决策-规划-执行-反馈-复盘"六阶段生命周期
+
+workflow:
+  name: workflow-name
+  description: 工作流描述
+  version: 1.0.0
+  
+  # 适用场景
+  scenarios:
+    - 场景1
+    - 场景2
+  
+  # 六阶段生命周期定义
+  lifecycle:
+    # 1. 调研阶段 - 收集信息、分析问题
+    research:
+      enabled: true
+      steps:
+        - step: steps/research/web_search
+          condition: "需要外部信息"
+        - step: steps/research/analyze_content
+          condition: "有参考文档"
+    
+    # 2. 决策阶段 - 评估选项、选择方案
+    decision:
+      enabled: true
+      steps:
+        - step: steps/decision/evaluate_options
+        - step: steps/decision/select_approach
+    
+    # 3. 规划阶段 - 拆解任务、制定计划
+    plan:
+      enabled: true
+      steps:
+        - step: steps/plan/break_down
+        - step: steps/plan/estimate_effort
+        - step: steps/plan/define_milestones
+    
+    # 4. 执行阶段 - 实施计划、生成产出
+    execute:
+      enabled: true
+      steps:
+        - step: steps/execute/create_artifact
+    
+    # 5. 反馈阶段 - 验证结果、收集反馈
+    feedback:
+      enabled: true
+      steps:
+        - step: steps/feedback/validate_result
+        - step: steps/feedback/check_quality
+    
+    # 6. 复盘阶段 - 提取经验、沉淀知识
+    review:
+      enabled: true
+      steps:
+        - step: steps/review/extract_learnings
+        - step: steps/review/update_knowledge
+
+  # 知识库引用配置
+  knowledge_base:
+    auto_activate: true
+    categories:
+      - experiences
+      - patterns
+      - decisions
+
+  # 输入输出定义
+  inputs:
+    - name: input_name
+      type: file
+      required: false
+      description: 输入描述
+  
+  outputs:
+    - name: output_name
+      type: file
+      description: 输出描述

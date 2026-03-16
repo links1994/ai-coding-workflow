@@ -1,0 +1,30 @@
+# 写入范围定义
+
+scope:
+  repos:
+    - name: mall-admin
+      path: outputs/code/repos/mall-admin
+      layers: [facade]
+      write: true
+    - name: mall-agent-employee-service
+      path: outputs/code/repos/mall-agent-employee-service
+      layers: [application]
+      write: true
+    - name: mall-toc-service
+      path: outputs/code/repos/mall-toc-service
+      layers: [facade]
+      write: true
+    - name: mall-inner-api
+      path: outputs/code/repos/mall-inner-api
+      layers: [api]
+      write: true
+
+  docs:
+    - path: outputs/PROGRAMS/P-2026-001-F-009/workspace/outputs
+      write: true
+
+  readonly:
+    - path: inputs/products/ai-agent-platform-prd.md
+    - path: outputs/PROGRAMS/P-2026-001-ai-agent-decomposition/workspace/decomposition.md
+    - path: knowledge/schemas/aim_agent_employee.md
+    - path: knowledge/schemas/aim_agent_style_config.md
