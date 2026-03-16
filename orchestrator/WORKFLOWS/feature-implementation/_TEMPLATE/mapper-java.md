@@ -1,14 +1,10 @@
-# Mapper 接口模板
+# Mapper 接口代码示例
 
-## 约束清单（DoD）
+> **规范参考**：[数据访问规范](../../../../.qoder/rules/code-generation/07-data-access-standards.md)
+> **DoD检查**：[DoD检查卡](../../../../.qoder/rules/code-generation/10-dod-cards.md#8-mapper-xml-dod-检查)
+> **模板规范**：[代码模板规范](../../../../.qoder/rules/code-generation/13-code-templates.md#24-mapper-接口模板)
 
-- [ ] Mapper 接口命名：`Aim{Name}Mapper`
-- [ ] 继承 `BaseMapper<Aim{Name}DO>`
-- [ ] 所有查询方法在 XML 中实现，禁止在接口上使用 `@Select` 等注解（极简单单表操作除外）
-- [ ] 方法命名语义清晰：`selectByXxx`（单条）、`selectListByXxx`（列表）、`countByXxx`（计数）
-- [ ] 参数使用 `@Param` 注解明确命名
-
-## 代码模板
+## 代码结构示例
 
 ```java
 package com.aim.mall.{service}.mapper;

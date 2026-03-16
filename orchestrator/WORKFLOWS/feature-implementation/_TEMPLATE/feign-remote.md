@@ -1,17 +1,10 @@
-# Feign 接口模板
+# Feign 接口代码示例
 
-## 约束清单（DoD）
+> **规范参考**：[Feign 接口规范](../../../../.qoder/rules/code-generation/03-feign-interface.md)
+> **DoD检查**：[DoD检查卡](../../../../.qoder/rules/code-generation/10-dod-cards.md#6-feign-接口-dod-检查)
+> **模板规范**：[代码模板规范](../../../../.qoder/rules/code-generation/13-code-templates.md#29-feign-接口模板)
 
-- [ ] 接口使用 `@FeignClient` 注解，指定 `name`（服务名）和 `fallback`（降级类）
-- [ ] 方法签名与对应 InnerController 完全一致
-- [ ] 返回类型为 `CommonResult<T>`
-- [ ] 请求参数使用 `XxxApiRequest`
-- [ ] 响应参数使用 `XxxApiResponse`
-- [ ] `XxxApiRequest` 写操作必须包含 `operatorId` 字段
-- [ ] 路径前缀为 `/inner/api/v1/`
-- [ ] 路径与 InnerController 保持一致
-
-## 代码模板
+## 代码结构示例
 
 ```java
 package com.aim.mall.{service}.api.feign;

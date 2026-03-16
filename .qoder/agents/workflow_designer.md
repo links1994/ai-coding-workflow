@@ -89,7 +89,22 @@ tools: Read, Write, Edit, Grep, Glob, ListDir
 ### 阶段2：流程建模
 1. 定义六阶段生命周期启用状态
 2. 设计每个阶段的具体步骤
-3. 明确步骤间的依赖关系
+3. **定义原子命令（Action）**：为每个步骤选择合适的原子命令
+4. 明确步骤间的依赖关系
+
+#### 原子命令选择指南
+
+| 步骤类型 | 推荐命令 | 说明 |
+|----------|----------|------|
+| 加载输入 | `load_*` | load_feature, load_rules, load_knowledge |
+| 分析上下文 | `analyze_*` | analyze_services, analyze_deps |
+| 需求澄清 | `clarify_*` | clarify_interfaces, clarify_data_model |
+| 生成产物 | `generate_*` | generate_spec, generate_code |
+| 用户确认 | `confirm` | 等待用户确认后继续 |
+| 委托执行 | `delegate_to_agent` | 委托 Agent 执行复杂任务 |
+| 审查检查 | `review_*` | review_code, review_spec |
+| 验证合规 | `validate_*` | validate_spec, validate_deps |
+| 归档产物 | `archive` | 归档到知识库 |
 
 ### 阶段3：输入输出设计
 1. 列出所有需要的输入
@@ -126,7 +141,16 @@ workflow:
   lifecycle:
     research:
       enabled: true/false
-      steps: [...]
+      steps:
+        - id: step_id
+          name: 步骤名称
+          action: 原子命令名称  # 关键：必须指定原子命令
+          agent: 可选Agent      # execute阶段通常需要
+          skill: 可选Skill      # 委托执行时需要
+          inputs: [输入列表]
+          outputs: [输出列表]
+          description: 步骤说明
+          require_confirmation: true/false  # 是否需要用户确认
     decision:
       enabled: true/false
       steps: [...]
@@ -135,6 +159,7 @@ workflow:
       steps: [...]
     execute:
       enabled: true/false
+      agent: 执行Agent名称    # 整个阶段委托给Agent
       steps: [...]
     feedback:
       enabled: true/false
@@ -207,6 +232,91 @@ program:
   version: 1.0.0
 ```
 
+## 原子命令规范
+
+### 命令命名规范
+
+```yaml
+# 加载类命令
+load_<target>:
+  - load_feature      # 加载 Feature 定义
+  - load_rules        # 加载 Rule 规范
+  - load_knowledge    # 加载知识库
+  - load_context      # 加载上下文
+
+# 分析类命令
+analyze_<target>:
+  - analyze_services  # 分析服务
+  - analyze_deps      # 分析依赖
+  - analyze_clarification_needs  # 分析澄清需求
+
+# 澄清类命令
+clarify_<aspect>:
+  - clarify_interfaces    # 澄清接口设计
+  - clarify_data_model    # 澄清数据模型
+  - clarify_business_rules # 澄清业务规则
+
+# 生成类命令
+generate_<artifact>:
+  - generate_spec     # 生成技术规格
+  - generate_code     # 生成代码
+  - generate_report   # 生成报告
+  - generate_docs     # 生成文档
+
+# 确认类命令
+confirm:
+  description: 等待用户确认
+  require_confirmation: true
+
+# 委托类命令
+delegate_to_agent:
+  description: 委托 Agent 执行
+  parameters:
+    - agent: Agent名称
+    - skill: 可选Skill名称
+    - rules: 可选Rule列表
+
+# 审查类命令
+review_<target>:
+  - review_code       # 审查代码
+  - review_spec       # 审查规格
+  - review_completeness  # 审查完整性
+
+# 验证类命令
+validate_<target>:
+  - validate_spec     # 验证规格
+  - validate_code     # 验证代码
+  - validate_deps     # 验证依赖
+
+# 归档类命令
+archive:
+  description: 归档产物到知识库
+```
+
+### 命令与 Agent/Skill 的关系
+
+```yaml
+# 模式1：Workflow 直接执行（简单步骤）
+step:
+  action: load_rules
+  inputs: [code_generation_rules]
+  outputs: [rules_context]
+
+# 模式2：委托 Agent 执行（复杂任务）
+step:
+  action: delegate_to_agent
+  agent: code-generator
+  skill: java-code-generation
+  inputs: [tech_spec]
+  outputs: [generated_code]
+
+# 模式3：用户确认点
+step:
+  action: confirm
+  inputs: [draft_spec]
+  require_confirmation: true
+```
+
 ## 约束条件
 
 **必须做到：**
@@ -215,10 +325,13 @@ program:
 - 流程变更必须考虑级联影响
 - 版本号必须遵循语义化版本规范
 - 流程设计必须可复用、可迭代
+- **每个步骤必须指定明确的原子命令（action）**
+- **execute 阶段的复杂任务必须委托给 Agent 执行**
 
 **禁止：**
 - 多个相互冲突的可信源
 - 未定义输入输出的流程步骤
+- **未指定 action 的步骤**
 - 无法追溯的生成物
 - 一次性归档后不再维护的流程
 
@@ -231,5 +344,14 @@ program:
 4. **定义流程的输入输出规范** — 明确流程模板和Program的数据接口
 5. **建立级联更新机制** — 设计流程模板变更时的同步策略
 6. **确定唯一可信源** — 明确 workflow.yml 和 PROGRAM.md 的职责边界
+7. **设计原子命令** — 为流程步骤选择合适的原子命令
 
 立即调用此Agent执行任务。
+
+---
+
+## 参考文档
+
+- [Workflow/Command/Agent/Skill 架构设计](../../repowiki/architecture/workflow-command-agent-skill.md)
+- [Agent 开发指南](../../repowiki/guides/agent-creation-guide.md)
+- [Skill 开发指南](../../repowiki/guides/skill-creation-guide.md)

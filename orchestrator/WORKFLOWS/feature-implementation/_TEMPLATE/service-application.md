@@ -1,22 +1,10 @@
-# ApplicationService 模板
+# ApplicationService 代码示例
 
-## 约束清单（DoD）
+> **规范参考**：[服务层规范](../../../../.qoder/rules/code-generation/08-service-layer-standards.md)
+> **DoD检查**：[DoD检查卡](../../../../.qoder/rules/code-generation/10-dod-cards.md#7-applicationservice-dod-检查)
+> **模板规范**：[代码模板规范](../../../../.qoder/rules/code-generation/13-code-templates.md#28-applicationservice-模板门面层)
 
-**门面服务 ApplicationService**：
-- [ ] 只调用 `RemoteService`（Feign 接口），**禁止**直接注入 `Mapper` 或 `AimXxxService`
-- [ ] 调用 Feign 接口后必须校验 `CommonResult.isSuccess()`
-- [ ] 远端业务失败使用 `CommonResult.failed(code, message)` 透传，**禁止**包装为 `BusinessException`
-- [ ] 远程通信异常（网络超时等）抛出 `RemoteApiCallException`
-- [ ] 负责将 `XxxApiResponse` 转换为 `XxxResponse`，即使字段完全相同，转换也**不得省略**
-- [ ] 不涉及写操作的方法不标注 `@Transactional`
-
-**应用服务 ApplicationService**：
-- [ ] 只调用 `QueryService` 和 `ManageService`，**禁止**直接注入 `Mapper` 或 `AimXxxService`
-- [ ] **禁止**在 ApplicationService 中编写 SQL 或查询逻辑
-- [ ] 涉及多个写操作的方法标注 `@Transactional(rollbackFor = Exception.class)`
-- [ ] 业务编排和协调，不直接操作数据
-
-## 门面服务代码模板
+## 代码结构示例
 
 ```java
 package com.aim.mall.admin.service;

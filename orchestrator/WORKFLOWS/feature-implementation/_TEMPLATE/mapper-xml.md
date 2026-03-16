@@ -1,15 +1,10 @@
-# Mapper XML 模板
+# Mapper XML 代码示例
 
-## 约束清单（DoD）
+> **规范参考**：[数据访问规范](../../../../.qoder/rules/code-generation/07-data-access-standards.md)
+> **DoD检查**：[DoD检查卡](../../../../.qoder/rules/code-generation/10-dod-cards.md#8-mapper-xml-dod-检查)
+> **模板规范**：[代码模板规范](../../../../.qoder/rules/code-generation/13-code-templates.md#25-mapper-xml-模板)
 
-- [ ] **禁止**使用 `SELECT *`，必须明确列出字段
-- [ ] 所有查询 SQL 必须包含删除过滤条件（根据表的删除策略）
-- [ ] 使用 `<sql id="Base_Column_List">` 定义可复用字段片段
-- [ ] 使用 `#{}` 占位符，**禁止**使用 `${}` 拼接（防 SQL 注入）
-- [ ] 包含 `resultMap` 定义，字段映射完整
-- [ ] namespace 与 Mapper 接口全限定名一致
-
-## 代码模板
+## 代码结构示例
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>

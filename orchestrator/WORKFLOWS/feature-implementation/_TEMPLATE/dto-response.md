@@ -1,15 +1,10 @@
-# DTO Response 模板
+# DTO Response 代码示例
 
-## 约束清单（DoD）
+> **规范参考**：[命名规范](../../../../.qoder/rules/code-generation/04-naming-standards.md)
+> **DoD检查**：[DoD检查卡](../../../../.qoder/rules/code-generation/10-dod-cards.md)
+> **模板规范**：[代码模板规范](../../../../.qoder/rules/code-generation/13-code-templates.md#210-dto-模板)
 
-- [ ] 门面服务 Response 以 `Response` 结尾，如 `JobTypeResponse`
-- [ ] 应用服务 ApiResponse 以 `ApiResponse` 结尾，如 `JobTypeApiResponse`
-- [ ] 必须实现 `Serializable`，`serialVersionUID = -1L`
-- [ ] `LocalDateTime` 字段必须标注 `@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")`
-- [ ] VO（视图对象）仅用于门面服务，用于聚合多个 Response
-- [ ] 禁止在 Response 中暴露敏感字段（如密码、密钥等）
-
-## 门面服务 Response 模板
+## 门面服务 Response 示例（JobTypeResponse）
 
 ```java
 package com.aim.mall.admin.dto.response.{domain};

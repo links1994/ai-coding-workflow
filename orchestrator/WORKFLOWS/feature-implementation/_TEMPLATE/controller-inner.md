@@ -1,25 +1,10 @@
-# Controller 模板（应用服务 - InnerController）
+# Controller 代码示例（应用服务 - InnerController）
 
-## 约束清单（DoD）
+> **规范参考**：[应用服务规范](../../../../.qoder/rules/code-generation/02-inner-service.md)
+> **DoD检查**：[DoD检查卡](../../../../.qoder/rules/code-generation/10-dod-cards.md#2-内部应用基础数据服务-controller-dod-检查)
+> **模板规范**：[代码模板规范](../../../../.qoder/rules/code-generation/13-code-templates.md#22-内部-controller-模板)
 
-- [ ] 只注入并调用 `ApplicationService`，**禁止**注入 `QueryService`、`ManageService`、`Mapper`
-- [ ] 不存在任何 `try-catch` 块
-- [ ] 不存在业务逻辑代码，只做参数接收和响应包装
-- [ ] **禁止**解析 `@RequestHeader`，操作人 ID 通过 `XxxApiRequest.operatorId` 接收
-- [ ] 请求入参使用 `XxxApiRequest`（以 `ApiRequest` 结尾），**禁止**使用 `XxxRequest`
-- [ ] 响应出参使用 `XxxApiResponse`（以 `ApiResponse` 结尾）
-- [ ] 参数 ≤ 2 个且为基础类型：使用 `@RequestParam`；其他情况：**一律使用 `@RequestBody`**
-- [ ] **禁止**使用 `@Valid` / `jakarta.validation`，改用手动 `validateXxx()` 方法
-- [ ] **禁止**使用 `@PathVariable` 路径参数
-- [ ] HTTP 方法仅使用 GET / POST，**禁止** PUT / DELETE
-- [ ] 所有写操作的 `XxxApiRequest` 包含 `operatorId` 字段（Long 类型）
-- [ ] `XxxApiResponse` 实现 `Serializable`，`serialVersionUID = -1L`
-- [ ] `XxxApiResponse` 中的 `LocalDateTime` 字段标注 `@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")`
-- [ ] 路径前缀为 `/inner/api/v1/`
-- [ ] 每个 Controller 方法包含手动参数校验方法 `validateXxx(request)`
-- [ ] `validateXxx()` 中校验必填字段不为 null/blank，`operatorId` 不为 null
-
-## 代码模板
+## 代码结构示例
 
 ```java
 package com.aim.mall.{service}.controller.inner;

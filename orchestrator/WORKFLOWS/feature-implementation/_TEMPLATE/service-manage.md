@@ -1,19 +1,10 @@
-# ManageService 模板
+# ManageService 代码示例
 
-## 约束清单（DoD）
+> **规范参考**：[数据访问规范](../../../../.qoder/rules/code-generation/07-data-access-standards.md)
+> **DoD检查**：[DoD检查卡](../../../../.qoder/rules/code-generation/10-dod-cards.md#4-manageservice-dod-检查)
+> **模板规范**：[代码模板规范](../../../../.qoder/rules/code-generation/13-code-templates.md#27-manageservice-模板)
 
-- [ ] 增删改操作使用 MyBatis-Plus IService 方法：`save()`、`updateById()`、`removeById()`
-- [ ] **禁止**在 ManageService 中编写业务查询逻辑（查询应放在 QueryService）
-- [ ] 写操作方法必须标注 `@Transactional(rollbackFor = Exception.class)`
-- [ ] `AimXxxService` / `AimXxxServiceImpl` **严禁标注 `@Transactional`**
-- [ ] 同一实现类中**禁止同时注入** `AimXxxService` 和 `AimXxxMapper`，必须二选一
-- [ ] 注入 `AimXxxService` 接口，**禁止**注入 `AimXxxServiceImpl`（实现类）
-- [ ] `ManageService` 不被 `ApplicationService` 以外的组件调用
-- [ ] **禁止**在 `ManageService` 中发起 Feign 远程调用
-- [ ] 方法入参使用 `XxxApiRequest`（写操作必须包含 `operatorId`）
-- [ ] 返回值为实体 ID（Long）或 void
-
-## 代码模板
+## 代码结构示例
 
 ```java
 package com.aim.mall.{service}.service;

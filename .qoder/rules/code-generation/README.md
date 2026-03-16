@@ -24,6 +24,8 @@ trigger: always_on
 | 09 | `09-directory-structure.md` | 目录结构规范 | 包路径、目录结构、文件命名 |
 | 10 | `10-dod-cards.md` | DoD 检查卡 | 代码生成后质量检查 |
 | 11 | `11-architecture-design.md` | 架构设计规范 | 项目整体架构、服务分层、调用关系、技术栈 |
+| 12 | `12-spec-generation-constraints.md` | 规格生成约束 | tech-spec 生成阶段的 DoD 约束 |
+| 13 | `13-code-templates.md` | 代码模板规范 | 代码生成时的结构模板和占位符规则 |
 
 ---
 
@@ -100,4 +102,4 @@ trigger: always_on
 - **Skill**: `.qoder/skills/java-code-generation/SKILL.md`
 - **Agent**: `.qoder/agents/code-generator.md`
 - **流程**: `orchestrator/WORKFLOWS/feature-implementation/workflow.yml`
-- **模板**: `orchestrator/WORKFLOWS/feature-implementation/_TEMPLATE/`
+- **代码示例**: `orchestrator/WORKFLOWS/feature-implementation/_TEMPLATE/`

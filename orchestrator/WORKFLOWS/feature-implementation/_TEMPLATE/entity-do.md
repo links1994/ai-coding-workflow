@@ -1,20 +1,10 @@
-# DO 实体模板
+# DO 实体代码示例
 
-## 约束清单（DoD）
+> **规范参考**：[数据库规范](../../../../.qoder/rules/code-generation/05-database-standards.md)
+> **DoD检查**：[DoD检查卡](../../../../.qoder/rules/code-generation/10-dod-cards.md#5-do-实体-dod-检查)
+> **模板规范**：[代码模板规范](../../../../.qoder/rules/code-generation/13-code-templates.md#23-do-实体模板)
 
-- [ ] 类名严格遵循 `Aim{Name}DO` 格式：必须以 `Aim` 开头，以 `DO` 结尾
-- [ ] 类名与表名对应：表名 `aim_{模块}_{业务名}` → 类名 `Aim{模块首字母大驼峰}{业务名首字母大驼峰}DO`
-- [ ] **禁止**在 DO 类上标注 `@JsonFormat`（DO 不涉及序列化给前端）
-- [ ] **禁止**在 DO 类或对应的 `AimXxxServiceImpl` 上标注 `@Transactional`
-- [ ] 使用 `@Data` 注解（或 `@Getter`/`@Setter`）
-- [ ] 必须继承 `BaseDO`（包含 id、createTime、updateTime 等基础字段）
-- [ ] 包含所有基础通用字段：`id`（BIGINT 自增主键）、`createTime`、`updateTime`
-- [ ] `status` 字段使用 `StatusEnum`（`1=启用`，`0=禁用`），**禁止**直接使用魔法数字 0/1
-- [ ] 删除字段按删除策略选择：`isDeleted`（软删除）、`deletedAt`（时间戳软删除）、无（物理删除）、`isActive`（配置表停用）
-- [ ] 对应 Mapper 命名：`Aim{Name}Mapper`
-- [ ] 对应 MP Service 命名：`Aim{Name}Service` / `Aim{Name}ServiceImpl`
-
-## 代码模板
+## 代码结构示例
 
 ```java
 package com.aim.mall.{service}.domain.entity;

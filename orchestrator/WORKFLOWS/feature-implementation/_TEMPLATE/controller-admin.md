@@ -1,24 +1,10 @@
-# Controller 模板（门面服务 - AdminController）
+# Controller 代码示例（门面服务 - AdminController）
 
-## 约束清单（DoD）
+> **规范参考**：[门面服务规范](../../../../.qoder/rules/code-generation/01-facade-service.md)
+> **DoD检查**：[DoD检查卡](../../../../.qoder/rules/code-generation/10-dod-cards.md#1-门面-controller-dod-检查)
+> **模板规范**：[代码模板规范](../../../../.qoder/rules/code-generation/13-code-templates.md#21-门面-controller-模板)
 
-- [ ] 只注入并调用 `ApplicationService`，**禁止**直接注入 `RemoteService`、`Mapper`
-- [ ] 不存在任何 `try-catch` 块（由 `GlobalExceptionHandler` 统一处理）
-- [ ] 不存在业务逻辑代码，只做参数接收和响应包装
-- [ ] 包含 `@Tag(name = "一级标题/二级标题")` 注解，使用 `/` 分隔符
-- [ ] 每个写操作方法包含 `@RequestHeader(AuthConstant.USER_TOKEN_HEADER) String user` 参数
-- [ ] 从 Header 解析操作人 ID：`UserInfoUtil.getUserInfo(user).getId()`
-- [ ] 将 `operatorId` 写入 `XxxApiRequest`，通过 Feign 传递给应用服务
-- [ ] 请求入参使用 `XxxRequest`（以 `Request` 结尾）
-- [ ] 响应出参使用 `XxxResponse` 或 `XxxVO`，**禁止**直接暴露 `XxxApiResponse` 给前端
-- [ ] POST/PUT/DELETE 使用 `@RequestBody` + `@Valid`；GET 多参数使用 `@RequestParam`
-- [ ] `XxxResponse` / `XxxVO` 中的 `LocalDateTime` 字段标注 `@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")`
-- [ ] `XxxRequest` 实现 `Serializable`，`serialVersionUID = -1L`
-- [ ] 路径前缀：`/admin/api/v1/`
-- [ ] 路径参数（`@PathVariable`）最多 1 个，且必须放在 URL 最后
-- [ ] HTTP 方法语义完整（GET / POST / PUT / DELETE）
-
-## 代码模板
+## 代码结构示例
 
 ```java
 package com.aim.mall.admin.controller.{domain};

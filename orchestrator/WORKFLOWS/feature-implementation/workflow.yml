@@ -33,21 +33,21 @@ workflow:
           
         - id: analyze_services
           name: 分析目标服务
-          action: analyze
+          action: analyze_services
           inputs: [feature_definition, target_services]
           outputs: [service_analysis]
           description: 分析涉及的服务分层（facade/application/data）及接口依赖
           
         - id: analyze_existing_code
           name: 分析现有代码
-          action: scan
+          action: analyze_existing_code
           inputs: [target_services]
           outputs: [existing_code_context]
           description: 扫描目标服务现有代码结构，识别可复用组件
           
         - id: analyze_clarification_needs
           name: 分析需澄清项
-          action: analyze
+          action: analyze_clarification_needs
           inputs: [feature_definition, service_analysis]
           outputs: [clarification_checklist]
           description: 识别 Feature 定义中模糊、不确定需要人工澄清的项
@@ -58,7 +58,7 @@ workflow:
       steps:
         - id: clarify_interfaces
           name: 澄清接口设计
-          action: clarify
+          action: clarify_interfaces
           inputs: [feature_definition, clarification_checklist, code_generation_standards]
           outputs: [interface_answers]
           description: |
@@ -73,7 +73,7 @@ workflow:
 
         - id: clarify_data_model
           name: 澄清数据模型
-          action: clarify
+          action: clarify_data_model
           inputs: [feature_definition, interface_answers, code_generation_standards]
           outputs: [data_model_answers]
           description: |
@@ -89,7 +89,7 @@ workflow:
 
         - id: clarify_business_rules
           name: 澄清业务规则
-          action: clarify
+          action: clarify_business_rules
           inputs: [feature_definition, data_model_answers, code_generation_standards]
           outputs: [business_rule_answers]
           description: |
@@ -105,7 +105,7 @@ workflow:
 
         - id: consolidate_clarification_answers
           name: 汇总澄清答案
-          action: generate
+          action: generate_clarification_summary
           inputs:
             - interface_answers
             - data_model_answers
@@ -118,7 +118,7 @@ workflow:
 
         - id: generate_decisions
           name: 生成技术决策记录
-          action: generate
+          action: generate_decisions
           inputs: [answers_md, feature_definition]
           outputs: [decisions_md]
           description: |
@@ -142,7 +142,7 @@ workflow:
             
         - id: determine_layer_order
           name: 确定分层实现顺序
-          action: decide
+          action: determine_layer_order
           inputs: [clarified_interfaces, service_analysis]
           outputs: [layer_implementation_order]
           decisions:
@@ -152,7 +152,7 @@ workflow:
             
         - id: determine_code_strategy
           name: 确定代码生成策略
-          action: decide
+          action: determine_code_strategy
           inputs: [feature_definition, existing_code_context]
           outputs: [code_generation_strategy]
           decisions:
@@ -167,7 +167,9 @@ workflow:
       steps:
         - id: generate_tech_spec
           name: 生成技术规格文档
-          action: generate
+          action: delegate_to_agent
+          agent: spec-generator
+          skill: tech-spec-generation
           inputs: 
             - clarified_interfaces
             - clarified_data_model
@@ -208,7 +210,9 @@ workflow:
           
         - id: analyze_tech_spec
           name: 分析技术规格书
-          action: analyze
+          action: delegate_to_agent
+          agent: spec-generator
+          skill: tech-spec-analyzer
           inputs: 
             - tech_spec_draft
             - code_generation_standards
@@ -245,7 +249,7 @@ workflow:
           
         - id: create_generation_plan
           name: 创建代码生成计划
-          action: plan
+          action: create_generation_plan
           inputs: [tech_spec, layer_implementation_order]
           outputs: [generation_plan]
           description: 基于 tech-spec 制定代码生成计划
@@ -257,7 +261,9 @@ workflow:
       steps:
         - id: generate_database
           name: 生成数据库结构
-          action: generate
+          action: delegate_to_agent
+          agent: code-generator
+          skill: java-code-generation
           inputs: [tech_spec, generation_plan]
           outputs: [database_schema, test_data_sql]
           condition: 当 tech-spec 包含数据模型时
@@ -265,28 +271,36 @@ workflow:
           
         - id: generate_feign_interfaces
           name: 生成 Feign 接口
-          action: generate
+          action: delegate_to_agent
+          agent: code-generator
+          skill: java-code-generation
           inputs: [tech_spec, generation_plan]
           outputs: [feign_interfaces]
           description: 基于 tech-spec 接口定义生成 mall-inner-api 代码
           
         - id: generate_application_layer
           name: 生成应用服务层
-          action: generate
+          action: delegate_to_agent
+          agent: code-generator
+          skill: java-code-generation
           inputs: [tech_spec, generation_plan, feign_interfaces, database_schema]
           outputs: [application_layer_code]
           description: 基于 tech-spec 生成应用服务层代码（依赖数据库结构）
           
         - id: generate_facade_layer
           name: 生成门面服务层
-          action: generate
+          action: delegate_to_agent
+          agent: code-generator
+          skill: java-code-generation
           inputs: [tech_spec, generation_plan, feign_interfaces]
           outputs: [facade_layer_code]
           description: 基于 tech-spec 生成门面服务层代码
           
         - id: generate_tests
           name: 生成 HTTP 测试文件
-          action: generate
+          action: delegate_to_agent
+          agent: code-generator
+          skill: http-test-generator
           inputs: [tech_spec, facade_layer_code, database_schema, test_data_sql]
           outputs: [test_files]
           output_path: outputs/data/http/
@@ -309,7 +323,8 @@ workflow:
           
         - id: invoke_swagger_skill
           name: 调用 Swagger 文档生成 Skill
-          action: invoke_skill
+          action: delegate_to_agent
+          agent: code-generator
           skill: swagger-doc-generation
           inputs: [tech_spec, facade_layer_code, application_layer_code, program_id]
           outputs: [swagger_docs]
@@ -325,7 +340,7 @@ workflow:
       steps:
         - id: review_code_quality
           name: 代码质量审查
-          action: review
+          action: review_code
           inputs: 
             - tech_spec
             - application_layer_code
@@ -335,7 +350,7 @@ workflow:
           
         - id: fix_issues
           name: 修复问题
-          action: fix
+          action: fix_issues
           inputs: [tech_spec, code_quality_report]
           outputs: [fixed_code]
           condition: 当审查发现问题时
@@ -347,7 +362,7 @@ workflow:
       steps:
         - id: validate_completeness
           name: 验证功能完整性
-          action: validate
+          action: validate_completeness
           inputs: 
             - tech_spec
             - application_layer_code
@@ -357,7 +372,7 @@ workflow:
           
         - id: generate_implementation_report
           name: 生成实现报告
-          action: generate
+          action: generate_implementation_report
           inputs: 
             - tech_spec
             - application_layer_code
@@ -403,16 +418,17 @@ workflow:
             - swagger_docs
           outputs: [archived_program]
           description: |
-            归档所有产物到知识库（knowledge/）：
-            1. Feature 文档 → knowledge/features/{feature_id}.md
-            2. Schema 文档 → knowledge/schemas/{table_name}.md
-            3. API 文档 → knowledge/apis/{service_name}-api.md
-            4. Swagger 文档 → knowledge/swagger/{service-name}/{ControllerName}/
-            5. 更新 Program 状态为 "已完成"
+            归档所有产物到 outputs/feature/{模块名}/ 目录：
+            1. Feature 文档 → outputs/feature/{module}/{feature_id}.md（功能归档统一文件）
+            2. Schema 文档 → outputs/schema/{module}/{table_name}.sql
+            3. API 文档 → outputs/feature/{module}/api.md
+            4. Swagger 文档 → outputs/swagger/{service-name}/{ControllerName}/
+            5. HTTP 测试 → outputs/http/{module}/{controller}Api.http
+            6. 更新 Program 状态为 "已完成"
 
             归档规则：
-            - Feature 文档：追加模式，同一 Feature 多次实现合并版本历史
-            - Schema 文档：追加模式，表结构变更追加到文档末尾
+            - Feature 文档：统一归档到单个文件，后续迭代基于该文件修改
+            - Schema 文档：追加模式，表结构变更追加到文件末尾
             - API 文档：覆盖模式，每次重新生成
             - Swagger 文档：增量更新模式，保留未变更接口内容
 
@@ -517,7 +533,7 @@ workflow:
     - name: database_scripts
       type: file
       description: 数据库脚本（包含建表和测试数据）
-      path: outputs/data/sql/
+      path: outputs/schema/{module}/
       files:
         - {table_name}.sql          # 按表名命名，如 aim_agent_job_type.sql
       naming_rule: 以数据库表名命名，包含建表语句和测试数据
@@ -539,17 +555,10 @@ workflow:
     - name: swagger_docs
       type: directory
       description: Swagger API 文档目录（Markdown 格式，按 Controller 隔离）
-      path: workspace/outputs/swagger/
+      path: outputs/swagger/{service-name}/
       structure:
-        - mall-admin/
-          - {ControllerName}/
-            - {中文功能描述}-{ControllerName}Api.md
-        - mall-toc-service/
-          - {ControllerName}/
-            - {中文功能描述}-{ControllerName}Api.md
-        - mall-agent-employee-service/
-          - {ControllerName}/
-            - {中文功能描述}-{ControllerName}Api.md
+        - {ControllerName}/
+          - {中文功能描述}-{ControllerName}Api.md
 
   # 可信源定义
   source_of_truth:
@@ -601,22 +610,22 @@ workflow:
     
     shared_artifacts:
       - name: database_scripts
-        path: outputs/data/sql/{table_name}.sql
+        path: outputs/schema/{module}/{table_name}.sql
         versioning: true
         strategy: append
         description: |
-          数据库 SQL 脚本，按表名命名，支持追加模式。
+          数据库 SQL 脚本，按模块和表名命名，支持追加模式。
           新 Feature 使用已有表时，测试数据追加到对应文件末尾。
           新表则创建新的 SQL 文件。
           每个变更块前添加注释：-- [Program-ID] YYYY-MM-DD
         
       - name: http_test_files
-        path: outputs/data/http/{module}-api.http
+        path: outputs/http/{module}/{controller}Api.http
         versioning: true
         strategy: append
         description: |
-          HTTP 测试文件，按功能模块命名，支持追加模式。
-          同一功能模块新增接口时，追加到现有文件末尾。
+          HTTP 测试文件，按模块和 Controller 命名，支持追加模式。
+          同一 Controller 新增接口时，追加到现有文件末尾。
           每个接口组前添加注释：### [Program-ID] {功能描述}
         
       - name: tech_spec
@@ -660,19 +669,23 @@ workflow:
   design_guides:
     description: |
       以下文档为流程设计阶段提供参考指导，帮助创建 Rules、Skills 和 Agents。
-      这些指南位于 docs/guides/ 目录，供 workflow-designer 在流程设计阶段参考。
+      这些指南位于 repowiki/guides/ 目录，供 workflow-designer 在流程设计阶段参考。
     guides:
       - name: rule-creation-guide
-        path: docs/guides/rule-creation-guide.md
+        path: repowiki/guides/rule-creation-guide.md
         description: 规则创建指南，指导如何创建项目规范
         
       - name: skill-creation-guide
-        path: docs/guides/skill-creation-guide.md
+        path: repowiki/guides/skill-creation-guide.md
         description: Skill 创建指南，指导如何创建可复用技能模块
         
       - name: agent-creation-guide
-        path: docs/guides/agent-creation-guide.md
+        path: repowiki/guides/agent-creation-guide.md
         description: Agent 创建指南，指导如何创建自定义智能体
+        
+      - name: architecture-design
+        path: repowiki/architecture/workflow-command-agent-skill.md
+        description: Workflow/Command/Agent/Skill 架构设计指南
 
   # 执行约束
   constraints:

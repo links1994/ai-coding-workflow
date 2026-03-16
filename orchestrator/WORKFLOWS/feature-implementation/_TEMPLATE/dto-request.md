@@ -1,16 +1,10 @@
-# DTO Request 模板
+# DTO Request 代码示例
 
-## 约束清单（DoD）
+> **规范参考**：[命名规范](../../../../.qoder/rules/code-generation/04-naming-standards.md)
+> **DoD检查**：[DoD检查卡](../../../../.qoder/rules/code-generation/10-dod-cards.md)
+> **模板规范**：[代码模板规范](../../../../.qoder/rules/code-generation/13-code-templates.md#210-dto-模板)
 
-- [ ] 门面服务 Request 以 `Request` 结尾，如 `JobTypeCreateRequest`
-- [ ] 应用服务 ApiRequest 以 `ApiRequest` 结尾，如 `JobTypeCreateApiRequest`
-- [ ] 必须实现 `Serializable`，`serialVersionUID = -1L`
-- [ ] 门面服务 Request 使用 `@NotNull`、`@NotBlank` 等校验注解
-- [ ] 应用服务 ApiRequest **不使用**校验注解，在 Controller 中手动校验
-- [ ] 写操作的 ApiRequest 必须包含 `operatorId` 字段
-- [ ] 分页查询 Request 继承 `PageQuery` 或包含 `pageNum`、`pageSize` 字段
-
-## 门面服务 Request 模板
+## 门面服务 Request 示例（JobTypeCreateRequest）
 
 ```java
 package com.aim.mall.admin.dto.request.{domain};

@@ -1,19 +1,10 @@
-# QueryService 模板
+# QueryService 代码示例
 
-## 约束清单（DoD）
+> **规范参考**：[数据访问规范](../../../../.qoder/rules/code-generation/07-data-access-standards.md)
+> **DoD检查**：[DoD检查卡](../../../../.qoder/rules/code-generation/10-dod-cards.md#3-queryservice-dod-检查)
+> **模板规范**：[代码模板规范](../../../../.qoder/rules/code-generation/13-code-templates.md#26-queryservice-模板)
 
-- [ ] **禁止**使用任何 MyBatis-Plus 查询 API：`getById()`、`list()`、`page()`、`lambdaQuery()`、`QueryWrapper`、`LambdaQueryWrapper`
-- [ ] 所有查询必须通过 XML Mapper 的原生 SQL 实现
-- [ ] 同一实现类中**禁止同时注入** `AimXxxService` 和 `AimXxxMapper`，必须二选一
-- [ ] 注入 `AimXxxService` 接口，**禁止**注入 `AimXxxServiceImpl`（实现类）
-- [ ] **禁止**调用 `aimXxxService.getBaseMapper()`
-- [ ] `QueryService` 不被 `ApplicationService` 以外的组件调用
-- [ ] **禁止**在 `QueryService` 中发起 Feign 远程调用
-- [ ] 不标注 `@Transactional`（查询层无需事务）
-- [ ] 方法入参使用 `XxxQuery` / `XxxPageQuery`（不接受 `XxxRequest` / `XxxApiRequest`）
-- [ ] 返回 `XxxApiResponse` 或 DTO，不直接返回 DO
-
-## 代码模板
+## 代码结构示例
 
 ```java
 package com.aim.mall.{service}.service;

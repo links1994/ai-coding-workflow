@@ -12,7 +12,7 @@ workflow:
       steps:
         - id: load_inputs
           name: 加载输入文档
-          action: read_product_doc
+          action: load_feature
           inputs: [product_doc]
           outputs: [product_requirements]
           
@@ -30,7 +30,7 @@ workflow:
           
         - id: analyze_context
           name: 分析上下文
-          action: analyze
+          action: analyze_context
           inputs: [product_requirements, architecture_constraints]
           outputs: [context_analysis]
           
@@ -40,7 +40,7 @@ workflow:
       steps:
         - id: determine_strategy
           name: 确定拆分策略
-          action: decide
+          action: determine_strategy
           inputs: [context_analysis, split_patterns_context]
           outputs: [split_strategy]
           decisions:
@@ -50,7 +50,7 @@ workflow:
             
         - id: define_dimensions
           name: 定义拆分维度
-          action: define
+          action: define_dimensions
           inputs: [split_strategy]
           outputs: [split_dimensions]
           
@@ -60,13 +60,13 @@ workflow:
       steps:
         - id: create_plan
           name: 创建拆分计划
-          action: plan
+          action: create_decomposition_plan
           inputs: [split_strategy, split_dimensions]
           outputs: [decomposition_plan]
           
         - id: validate_plan
           name: 验证计划可行性
-          action: validate
+          action: validate_plan
           inputs: [decomposition_plan, architecture_constraints]
           outputs: [validated_plan]
           
@@ -77,19 +77,22 @@ workflow:
       steps:
         - id: scan_requirements
           name: 需求全景扫描
-          action: scan
+          action: delegate_to_agent
+          agent: req-decomposer
           inputs: [product_requirements]
           outputs: [requirement_list]
           
         - id: domain_partition
           name: 业务域划分
-          action: partition
+          action: delegate_to_agent
+          agent: req-decomposer
           inputs: [requirement_list, architecture_constraints]
           outputs: [domain_mapping]
           
         - id: build_tree
           name: 构建需求树
-          action: build_tree
+          action: delegate_to_agent
+          agent: req-decomposer
           inputs: [domain_mapping, split_dimensions]
           outputs: [requirements_tree]
           source_of_truth: true
@@ -122,7 +125,7 @@ workflow:
           
         - id: batch_planning
           name: 批次优先级排序
-          action: batch
+          action: create_batch_plan
           inputs: [requirements_tree, dependency_graph]
           outputs: [execution_plan]
           
@@ -138,7 +141,7 @@ workflow:
           
         - id: generate_report
           name: 生成拆分报告
-          action: generate
+          action: generate_decomposition_report
           inputs: [requirements_tree, dependency_graph, execution_plan]
           outputs: [decomposition_report]
           
@@ -155,7 +158,7 @@ workflow:
           
         - id: apply_adjustments
           name: 应用调整
-          action: fix
+          action: fix_issues
           inputs: [decomposition_report, user_feedback]
           outputs: [adjusted_report]
           condition: 当用户提出调整意见时
@@ -167,19 +170,19 @@ workflow:
       steps:
         - id: validate_completeness
           name: 验证完整性
-          action: validate
+          action: validate_completeness
           inputs: [decomposition_report, product_requirements]
           outputs: [completeness_check]
           
         - id: validate_dependencies
           name: 验证依赖合理性
-          action: validate
+          action: validate_deps
           inputs: [dependency_graph]
           outputs: [dependency_check]
           
         - id: extract_patterns
           name: 提炼拆分模式
-          action: extract
+          action: extract_patterns
           inputs: [decomposition_report, split_strategy]
           outputs: [new_patterns]
           condition: 当发现新的可复用模式时
@@ -214,8 +217,8 @@ workflow:
     - name: split_patterns
       type: knowledge
       required: false
-      description: 历史拆分模式，自动从 knowledge/patterns/ 加载
-      path: knowledge/patterns/requirement-splitting/
+      description: 历史拆分模式，自动从 repowiki/patterns/ 加载
+      path: repowiki/patterns/requirement-splitting/
       auto_load: true
       pattern_match: true
       
@@ -242,7 +245,7 @@ workflow:
     - name: new_patterns
       type: knowledge
       description: 新提炼的可复用拆分模式
-      path: knowledge/patterns/requirement-splitting/
+      path: repowiki/patterns/requirement-splitting/
       condition: 当发现新的可复用模式时
       format: yaml
 
@@ -262,7 +265,7 @@ workflow:
       description: 需求树变更时，重新生成依赖图和执行计划
       
     - trigger: new_patterns
-      effects: [knowledge/patterns/]
+      effects: [repowiki/patterns/]
       action: append
       description: 新发现的模式沉淀到知识库
 
