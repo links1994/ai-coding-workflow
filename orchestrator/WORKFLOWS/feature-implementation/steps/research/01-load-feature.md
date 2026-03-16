@@ -35,7 +35,7 @@
 feature_definition:
   id: F-001
   name: {功能标题}
-  domain: 配置管理域
+  domain: {Domain}
   module: {app-service}
   type: functional
   priority: P0

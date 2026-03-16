@@ -81,9 +81,9 @@ file_inventory:
   
   by_layer:
     data:
-      - file_path: "mall-product/domain/entity/AimProductDO.java"
+      - file_path: "{data-service}/domain/entity/Aim{Name}DO.java"
         file_type: entity
-        service: mall-product
+        service: {data-service}
         generated: false
         
     application:

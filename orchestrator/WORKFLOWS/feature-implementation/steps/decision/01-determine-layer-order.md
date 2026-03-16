@@ -25,7 +25,7 @@ facade 层（门面服务）
 ### 决策规则
 
 1. **Data 层优先**
-   - 如果 Feature 涉及 data 层服务（mall-product, mall-client 等）
+   - 如果 Feature 涉及 data 层服务（{data-service}, {data-service-2} 等）
    - 先生成 data 层代码，提供基础数据能力
 
 2. **Application 层其次**
@@ -51,8 +51,8 @@ facade 层（门面服务）
 layer_implementation_order:
   - layer: data
     services:
-      - mall-product
-      - mall-client
+      - {data-service}
+      - {data-service-2}
     reason: 提供基础数据支持
     
   - layer: application

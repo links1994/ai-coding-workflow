@@ -143,8 +143,9 @@ workflow:
         - id: determine_layer_order
           name: 确定分层实现顺序
           action: determine_layer_order
-          inputs: [clarified_interfaces, service_analysis]
+          inputs: [clarified_interfaces, service_analysis, feature_definition]
           outputs: [layer_implementation_order]
+          step_file: steps/decision/01-determine-layer-order.md
           decisions:
             - 先生成 data 层（基础数据服务）vs 先生成 application 层
             - facade 层最后生成（依赖 inner-api 接口）
@@ -247,12 +248,13 @@ workflow:
             询问："技术规格分析已完成，是否还有其他需要确认的问题？"
           require_confirmation: true
           
-        - id: create_generation_plan
-          name: 创建代码生成计划
-          action: create_generation_plan
-          inputs: [tech_spec, layer_implementation_order]
-          outputs: [generation_plan]
-          description: 基于 tech-spec 制定代码生成计划
+        - id: create_file_inventory
+          name: 创建文件清单
+          action: create_file_inventory
+          inputs: [tech_spec, layer_implementation_order, code_generation_strategy]
+          outputs: [file_inventory, generation_plan]
+          step_file: steps/plan/01-create-file-inventory.md
+          description: 基于 tech-spec 和代码生成策略，列出需要生成的所有文件
           
     execute:
       enabled: true
@@ -265,7 +267,8 @@ workflow:
           agent: code-generator
           skill: java-code-generation
           inputs: [tech_spec, generation_plan]
-          outputs: [database_schema, test_data_sql]
+          outputs: [database_schema, entity_classes, test_data_sql]
+          step_file: steps/execute/01-generate-database.md
           condition: 当 tech-spec 包含数据模型时
           description: 生成建表 SQL、测试数据 SQL 和 Entity/DO 类
           
@@ -276,6 +279,7 @@ workflow:
           skill: java-code-generation
           inputs: [tech_spec, generation_plan]
           outputs: [feign_interfaces]
+          step_file: steps/execute/01-generate-feign-interfaces.md
           description: 基于 tech-spec 接口定义生成 mall-inner-api 代码
           
         - id: generate_application_layer
@@ -285,6 +289,7 @@ workflow:
           skill: java-code-generation
           inputs: [tech_spec, generation_plan, feign_interfaces, database_schema]
           outputs: [application_layer_code]
+          step_file: steps/execute/02-generate-application-layer.md
           description: 基于 tech-spec 生成应用服务层代码（依赖数据库结构）
           
         - id: generate_facade_layer
@@ -294,6 +299,7 @@ workflow:
           skill: java-code-generation
           inputs: [tech_spec, generation_plan, feign_interfaces]
           outputs: [facade_layer_code]
+          step_file: steps/execute/03-generate-facade-layer.md
           description: 基于 tech-spec 生成门面服务层代码
           
         - id: generate_tests
@@ -305,6 +311,7 @@ workflow:
           outputs: [test_files]
           output_path: outputs/data/http/
           naming_rule: 按功能模块命名，如 job-type-api.http
+          step_file: steps/execute/04-generate-http-tests.md
           description: |
             基于 tech-spec 生成 HTTP 测试文件。
             输出路径：outputs/data/http/{module}-api.http
@@ -321,19 +328,6 @@ workflow:
             询问："代码生成已完成，是否还有其他需要调整或补充的内容？"
           require_confirmation: true
           
-        - id: invoke_swagger_skill
-          name: 调用 Swagger 文档生成 Skill
-          action: delegate_to_agent
-          agent: code-generator
-          skill: swagger-doc-generation
-          inputs: [tech_spec, facade_layer_code, application_layer_code, program_id]
-          outputs: [swagger_docs]
-          condition: 当 Program 涉及门面服务 Controller 变更时
-          description: |
-            委托 swagger-doc-generation Skill 生成 API 文档。
-            输出路径：swagger/{service-name}/{ControllerName}/{中文功能描述}-{ControllerName}Api.md
-            支持增量更新，保留未变更接口内容。
-          
     feedback:
       enabled: true
       description: 代码审查与修正
@@ -346,6 +340,7 @@ workflow:
             - application_layer_code
             - facade_layer_code
           outputs: [code_quality_report]
+          step_file: steps/feedback/01-review-code-quality.md
           description: 对照 tech-spec（内含时序图）检查代码是否符合规范
           
         - id: fix_issues
@@ -354,6 +349,7 @@ workflow:
           inputs: [tech_spec, code_quality_report]
           outputs: [fixed_code]
           condition: 当审查发现问题时
+          step_file: steps/feedback/02-fix-issues.md
           description: 根据审查报告修复代码问题，确保与 tech-spec 一致
           
     review:
@@ -368,6 +364,7 @@ workflow:
             - application_layer_code
             - facade_layer_code
           outputs: [completeness_check]
+          step_file: steps/review/01-validate-completeness.md
           description: 验证生成的代码是否完整实现 tech-spec（内含时序图）定义
           
         - id: generate_implementation_report
@@ -385,6 +382,7 @@ workflow:
             - completeness_check
             - swagger_docs
           outputs: [implementation_report]
+          step_file: steps/review/03-generate-implementation-report.md
           description: 整合所有产物生成最终的实现报告
           
         - id: confirm_artifacts
@@ -399,10 +397,23 @@ workflow:
             - 生成的代码文件
             - 数据库脚本
             - 测试文件
-            - Swagger 文档
             
             询问："所有产物已生成，是否确认归档到知识库？是否还有其他需要确认的内容？"
           require_confirmation: true
+          
+        - id: generate_swagger_docs
+          name: 生成 Swagger API 文档
+          action: delegate_to_agent
+          agent: code-generator
+          skill: swagger-doc-generation
+          inputs: [tech_spec, facade_layer_code, application_layer_code, program_id]
+          outputs: [swagger_docs]
+          condition: 当 Program 涉及门面服务 Controller 变更时
+          step_file: steps/review/02-generate-swagger.md
+          description: |
+            委托 swagger-doc-generation Skill 生成 API 文档。
+            输出路径：outputs/swagger/{service-name}/{ControllerName}/{中文功能描述}-{ControllerName}Api.md
+            支持增量更新，保留未变更接口内容。
           
         - id: archive_artifacts
           name: 归档产物

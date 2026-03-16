@@ -31,7 +31,7 @@
 
 ```yaml
 acceptance_criteria:
-  - criteria: "支持岗位CRUD操作"
+  - criteria: "支持{Name}CRUD操作"
     validation:
       - check: "create 接口存在"
         status: ✅
@@ -42,11 +42,11 @@ acceptance_criteria:
       - check: "getById 接口存在"
         status: ✅
         
-  - criteria: "返回该岗位下关联员工数"
+  - criteria: "返回关联数据"
     validation:
-      - check: "{Name}ApiResponse 包含 employeeCount 字段"
+      - check: "{Name}ApiResponse 包含 {关联字段}"
         status: ✅
-      - check: "ApplicationService 中填充 employeeCount"
+      - check: "ApplicationService 中填充 {关联字段}"
         status: ✅
         
   - criteria: "启用/禁用状态正确联动"
@@ -125,17 +125,17 @@ completeness_check:
         feign: ✅
         
   acceptance_criteria:
-    - criteria: "支持岗位CRUD操作"
+    - criteria: "支持{Name}CRUD操作"
       status: passed
       evidence:
         - "{Name}AdminController 包含 create/update/delete/getById/page 方法"
         - "{Name}InnerController 包含对应方法"
         
-    - criteria: "返回该岗位下关联员工数"
+    - criteria: "返回关联数据"
       status: passed
       evidence:
-        - "{Name}ApiResponse.employeeCount 字段存在"
-        - "{Name}ApplicationServiceImpl.convertToApiResponse() 中填充 employeeCount"
+        - "{Name}ApiResponse.{关联字段} 字段存在"
+        - "{Name}ApplicationServiceImpl.convertToApiResponse() 中填充 {关联字段}"
         
     - criteria: "启用/禁用状态正确联动"
       status: passed

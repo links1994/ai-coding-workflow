@@ -16,13 +16,15 @@ workflow:
           action: analyze
           inputs: [tech_spec, implementation_report]
           outputs: [test_scope]
+          step_file: steps/research/01-analyze-test-scope.md
           description: 从 tech-spec 和实现报告中提取需要测试的接口列表
 
         - id: check_environment_prerequisites
           name: 检查环境前置条件
           action: validate
-          inputs: [target_services]
+          inputs: [target_services, nacos_config, database_config]
           outputs: [environment_status]
+          step_file: steps/research/02-check-environment.md
           description: |
             验证测试环境是否满足要求：
             1. Nacos 服务是否可访问（配置中心）
@@ -38,6 +40,7 @@ workflow:
           action: decide
           inputs: [test_scope, environment_status]
           outputs: [test_strategy]
+          step_file: steps/decision/01-determine-test-strategy.md
           description: |
             基于接口类型确定测试策略：
             - 正常场景测试（必填参数、完整参数）
@@ -49,6 +52,7 @@ workflow:
           action: generate
           inputs: [test_strategy, tech_spec]
           outputs: [test_cases]
+          step_file: steps/decision/02-generate-test-cases.md
           description: |
             生成标准化测试用例文件：
             - 每个接口生成多个测试场景
@@ -75,6 +79,7 @@ workflow:
           action: plan
           inputs: [test_cases, environment_status]
           outputs: [test_plan]
+          step_file: steps/plan/01-create-test-plan.md
           description: |
             制定测试执行计划：
             - 按依赖关系排序测试用例
@@ -86,6 +91,7 @@ workflow:
           action: prepare
           inputs: [test_plan, database_schema, test_data_sql]
           outputs: [prepared_test_data]
+          step_file: steps/plan/02-prepare-test-data.md
           description: |
             准备测试所需数据：
             - 初始化数据库测试数据
@@ -101,6 +107,7 @@ workflow:
           action: execute
           inputs: [test_plan, prepared_test_data]
           outputs: [test_results, test_report]
+          step_file: steps/execute/01-run-api-tests.md
           description: |
             执行 HTTP 接口自动化测试：
             - 按测试计划顺序执行
@@ -113,6 +120,7 @@ workflow:
           action: validate
           inputs: [test_results, test_plan]
           outputs: [validation_result]
+          step_file: steps/execute/02-validate-results.md
           description: |
             验证测试结果：
             - P0 用例必须 100% 通过
@@ -129,6 +137,7 @@ workflow:
           inputs: [test_results]
           outputs: [failure_analysis]
           condition: 当存在失败用例时
+          step_file: steps/feedback/01-analyze-failures.md
           description: |
             分析测试失败原因：
             - 区分代码缺陷/环境问题/用例问题
@@ -141,6 +150,7 @@ workflow:
           inputs: [failure_analysis]
           outputs: [fix_result]
           condition: 当需要修复时
+          step_file: steps/feedback/02-fix-issues.md
           description: |
             修复发现的问题：
             - 代码缺陷：返回需求实现流程修复
@@ -175,6 +185,7 @@ workflow:
           action: generate
           inputs: [test_results, validation_result, test_cases, test_plan]
           outputs: [test_report]
+          step_file: steps/review/01-generate-test-report.md
           description: |
             生成完整测试报告：
             - 测试执行摘要（通过/失败/跳过）

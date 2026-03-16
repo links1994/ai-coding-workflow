@@ -24,41 +24,41 @@
 ```java
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/admin/api/v1/job-type")
-@Tag(name = "岗位类型管理")
+@RequestMapping("/admin/api/v1/{path}")
+@Tag(name = "{Name}管理")
 public class {Name}AdminController {
     
-    private final {Name}ApplicationService jobTypeApplicationService;
+    private final {Name}ApplicationService {name}ApplicationService;
     
-    @Operation(summary = "创建岗位类型")
+    @Operation(summary = "创建{Name}")
     @PostMapping("/create")
     public CommonResult<Long> create(
             @RequestBody @Valid {Name}CreateRequest request,
             @RequestHeader(AuthConstant.USER_TOKEN_HEADER) String user) {
         Long operatorId = TokenUtil.parseUserId(user);
-        return jobTypeApplicationService.create(request, operatorId);
+        return {name}ApplicationService.create(request, operatorId);
     }
     
-    @Operation(summary = "更新岗位类型")
+    @Operation(summary = "更新{Name}")
     @PostMapping("/update")
     public CommonResult<Void> update(
             @RequestBody @Valid {Name}UpdateRequest request,
             @RequestHeader(AuthConstant.USER_TOKEN_HEADER) String user) {
         Long operatorId = TokenUtil.parseUserId(user);
-        return jobTypeApplicationService.update(request, operatorId);
+        return {name}ApplicationService.update(request, operatorId);
     }
     
-    @Operation(summary = "获取岗位类型详情")
+    @Operation(summary = "获取{Name}详情")
     @GetMapping("/detail")
     public CommonResult<{Name}Response> getById(@RequestParam("id") Long id) {
-        return jobTypeApplicationService.getById(id);
+        return {name}ApplicationService.getById(id);
     }
     
-    @Operation(summary = "分页查询岗位类型")
+    @Operation(summary = "分页查询{Name}")
     @PostMapping("/page")
     public CommonResult<CommonResult.PageData<{Name}Response>> page(
             @RequestBody @Valid {Name}PageRequest request) {
-        return jobTypeApplicationService.page(request);
+        return {name}ApplicationService.page(request);
     }
 }
 ```
@@ -79,7 +79,7 @@ public class {Name}AdminController {
 @RequiredArgsConstructor
 public class {Name}ApplicationServiceImpl implements {Name}ApplicationService {
     
-    private final {Name}RemoteService agentEmployeeRemoteService;
+    private final {Name}RemoteService {name}RemoteService;
     
     @Override
     public CommonResult<Long> create({Name}CreateRequest request, Long operatorId) {
@@ -95,7 +95,7 @@ public class {Name}ApplicationServiceImpl implements {Name}ApplicationService {
         apiRequest.setSortOrder(request.getSortOrder());
         
         // 调用 Feign 接口
-        return agentEmployeeRemoteService.create{Name}(apiRequest);
+        return {name}RemoteService.create{Name}(apiRequest);
     }
     
     @Override
@@ -103,7 +103,7 @@ public class {Name}ApplicationServiceImpl implements {Name}ApplicationService {
         // String 参数去空格
         Long trimmedId = id; // Long 类型无需去空格
         
-        CommonResult<{Name}ApiResponse> result = agentEmployeeRemoteService.get{Name}ById(trimmedId);
+        CommonResult<{Name}ApiResponse> result = {name}RemoteService.get{Name}ById(trimmedId);
         
         // 转换为门面层 Response
         if (result.getData() == null) {
@@ -120,7 +120,7 @@ public class {Name}ApplicationServiceImpl implements {Name}ApplicationService {
         response.setDescription(apiResponse.getDescription());
         response.setSortOrder(apiResponse.getSortOrder());
         response.setStatus(apiResponse.getStatus());
-        response.setEmployeeCount(apiResponse.getEmployeeCount()); // 模块内已填充
+        response.set{关联字段}(apiResponse.get{关联字段}()); // 模块内已填充
         response.setCreateTime(apiResponse.getCreateTime());
         response.setUpdateTime(apiResponse.getUpdateTime());
         return response;
@@ -142,7 +142,7 @@ public class {Name}ApplicationServiceImpl implements {Name}ApplicationService {
 @Data
 public class {Name}CreateRequest {
     
-    @NotBlank(message = "岗位类型名称不能为空")
+    @NotBlank(message = "{Name}名称不能为空")
     @Size(max = 50, message = "名称长度不能超过50")
     private String name;
     
@@ -179,7 +179,7 @@ public class {Name}Response {
     
     private Integer status;
     
-    private Integer employeeCount;
+    private Integer {关联字段};
     
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
@@ -192,7 +192,7 @@ public class {Name}Response {
 **约束**：
 - 时间字段使用 `@JsonFormat`
 - 字段与前端展示需求对齐
-- 模块内关联字段（如 employeeCount）在应用层已填充
+- 模块内关联字段（如 {关联字段}）在应用层已填充
 
 ## 生成步骤
 

@@ -15,24 +15,28 @@ workflow:
           action: load_feature
           inputs: [product_doc]
           outputs: [product_requirements]
+          step_file: steps/research/01-load-inputs.md
           
         - id: load_rules
           name: 加载架构规则
           action: load_rules
           inputs: [architecture_rules]
           outputs: [architecture_constraints]
+          step_file: steps/research/02-load-rules.md
           
         - id: load_patterns
           name: 加载拆分模式
           action: load_knowledge
           inputs: [split_patterns]
           outputs: [split_patterns_context]
+          step_file: steps/research/03-load-patterns.md
           
         - id: analyze_context
           name: 分析上下文
           action: analyze_context
           inputs: [product_requirements, architecture_constraints]
           outputs: [context_analysis]
+          step_file: steps/research/04-analyze-context.md
           
     decision:
       enabled: true
@@ -43,6 +47,7 @@ workflow:
           action: determine_strategy
           inputs: [context_analysis, split_patterns_context]
           outputs: [split_strategy]
+          step_file: steps/decision/01-determine-strategy.md
           decisions:
             - 按业务域拆分 vs 按技术模块拆分
             - 深度优先 vs 广度优先
@@ -53,6 +58,7 @@ workflow:
           action: define_dimensions
           inputs: [split_strategy]
           outputs: [split_dimensions]
+          step_file: steps/decision/02-define-dimensions.md
           
     plan:
       enabled: true
@@ -63,12 +69,14 @@ workflow:
           action: create_decomposition_plan
           inputs: [split_strategy, split_dimensions]
           outputs: [decomposition_plan]
+          step_file: steps/plan/01-create-decomposition-plan.md
           
         - id: validate_plan
           name: 验证计划可行性
           action: validate_plan
           inputs: [decomposition_plan, architecture_constraints]
           outputs: [validated_plan]
+          step_file: steps/plan/02-validate-plan.md
           
     execute:
       enabled: true
@@ -81,6 +89,7 @@ workflow:
           agent: req-decomposer
           inputs: [product_requirements]
           outputs: [requirement_list]
+          step_file: steps/execute/01-scan-requirements.md
           
         - id: domain_partition
           name: 业务域划分
@@ -88,6 +97,7 @@ workflow:
           agent: req-decomposer
           inputs: [requirement_list, architecture_constraints]
           outputs: [domain_mapping]
+          step_file: steps/execute/02-domain-partition.md
           
         - id: build_tree
           name: 构建需求树
@@ -96,6 +106,7 @@ workflow:
           inputs: [domain_mapping, split_dimensions]
           outputs: [requirements_tree]
           source_of_truth: true
+          step_file: steps/execute/03-build-tree.md
           
         - id: confirm_requirements_tree
           name: 确认需求树
@@ -112,6 +123,7 @@ workflow:
           action: analyze_deps
           inputs: [requirements_tree]
           outputs: [dependency_graph]
+          step_file: steps/execute/04-analyze-dependencies.md
           
         - id: confirm_dependencies
           name: 确认依赖关系
@@ -128,6 +140,7 @@ workflow:
           action: create_batch_plan
           inputs: [requirements_tree, dependency_graph]
           outputs: [execution_plan]
+          step_file: steps/execute/05-batch-planning.md
           
         - id: confirm_execution_plan
           name: 确认执行计划
@@ -144,6 +157,7 @@ workflow:
           action: generate_decomposition_report
           inputs: [requirements_tree, dependency_graph, execution_plan]
           outputs: [decomposition_report]
+          step_file: steps/execute/06-generate-report.md
           
     feedback:
       enabled: true
@@ -154,6 +168,7 @@ workflow:
           action: confirm
           inputs: [decomposition_report]
           outputs: [user_feedback]
+          step_file: steps/feedback/01-collect-feedback.md
           description: 展示拆分结果，询问用户是否还有其他需要调整的地方
           
         - id: apply_adjustments
@@ -162,6 +177,7 @@ workflow:
           inputs: [decomposition_report, user_feedback]
           outputs: [adjusted_report]
           condition: 当用户提出调整意见时
+          step_file: steps/feedback/02-apply-adjustments.md
           description: 根据用户反馈调整需求拆分
       
     review:
@@ -173,12 +189,14 @@ workflow:
           action: validate_completeness
           inputs: [decomposition_report, product_requirements]
           outputs: [completeness_check]
+          step_file: steps/review/01-validate-completeness.md
           
         - id: validate_dependencies
           name: 验证依赖合理性
           action: validate_deps
           inputs: [dependency_graph]
           outputs: [dependency_check]
+          step_file: steps/review/02-validate-dependencies.md
           
         - id: extract_patterns
           name: 提炼拆分模式
@@ -186,6 +204,7 @@ workflow:
           inputs: [decomposition_report, split_strategy]
           outputs: [new_patterns]
           condition: 当发现新的可复用模式时
+          step_file: steps/review/03-extract-patterns.md
 
   # 输入定义
   inputs:

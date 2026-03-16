@@ -21,7 +21,7 @@
 ```java
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/inner/api/v1/job-type")
+@RequestMapping("/inner/api/v1/{path}")
 public class {Name}InnerController {
     
     private final {Name}ApplicationService jobTypeApplicationService;
