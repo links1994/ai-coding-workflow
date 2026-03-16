@@ -28,7 +28,7 @@ globs: [ "**/*.java", "**/*.xml", "**/*.yml", "**/*.yaml" ]
           ┌────────────┼────────────┬───────────┐
           ▼            ▼            ▼           ▼
     ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
-    │mall-admin│ │mall-tob  │ │mall-toc  │ │ mall-ai  │
+    │{facade-service}│ │mall-tob  │ │mall-toc  │ │ {facade-service-4}  │
     │平台管理端 │ │ 商家管理端 │ │  APP端   │ │ AI对话   │
     └──────────┘ └──────────┘ └──────────┘ └──────────┘
          │            │            │            │
@@ -41,7 +41,7 @@ globs: [ "**/*.java", "**/*.xml", "**/*.yml", "**/*.yaml" ]
           ▼            ▼            ▼
     ┌──────────────────────────────────────┐
     │            应用服务层                 │
-    │  mall-agent-employee-service（智能体）│
+    │  {app-service}（智能体）│
     │  mall-merchant（商家/商品）           │
     └──────────────┬───────────────────────┘
                    │ Feign RPC
@@ -71,10 +71,10 @@ globs: [ "**/*.java", "**/*.xml", "**/*.yml", "**/*.yaml" ]
 
 | 服务名称 | 职责说明 | 对应前端 | 接口路径前缀 |
 |----------|----------|----------|--------------|
-| `mall-admin` | 平台管理端 BFF | admin 后台管理端 | `/admin/api/v1/` |
-| `mall-tob-service` | 商家管理端 BFF | merchant 商家端 | `/merchant/api/v1/` |
-| `mall-toc-service` | 消费者 APP 端 BFF | app 移动端 | `/app/api/v1/` |
-| `mall-ai` | AI 对话 BFF | AI 对话入口（多端） | `/ai/api/v1/` |
+| `{facade-service}` | 平台管理端 BFF | admin 后台管理端 | `/admin/api/v1/` |
+| `{facade-service-3}` | 商家管理端 BFF | merchant 商家端 | `/merchant/api/v1/` |
+| `{facade-service-2}` | 消费者 APP 端 BFF | app 移动端 | `/app/api/v1/` |
+| `{facade-service-4}` | AI 对话 BFF | AI 对话入口（多端） | `/ai/api/v1/` |
 
 ### 2.2 应用服务层（Application Service Layer）
 
@@ -87,7 +87,7 @@ globs: [ "**/*.java", "**/*.xml", "**/*.yml", "**/*.yaml" ]
 
 | 服务名称 | 职责说明 | 接口路径前缀 |
 |----------|----------|--------------|
-| `mall-agent-employee-service` | 智能体员工核心业务 | `/inner/api/v1/` |
+| `{app-service}` | 智能体{关联实体}核心业务 | `/inner/api/v1/` |
 | `mall-merchant` | 商家管理、商品管理业务 | `/inner/api/v1/` |
 
 ### 2.3 基础数据服务层（Base Data Service Layer）
@@ -111,7 +111,7 @@ globs: [ "**/*.java", "**/*.xml", "**/*.yml", "**/*.yaml" ]
 | 模块名称 | 类型 | 职责说明 |
 |----------|------|----------|
 | `mall-common` | 公共依赖库 | 整个项目的公共工具类、基础组件，被所有模块依赖 |
-| `mall-inner-api` | 聚合 API 工程 | 多模块聚合工程，包含各服务对外提供的 Feign 接口定义（`XxxRemoteService`），供调用方依赖引入 |
+| `{inner-api-service}` | 聚合 API 工程 | 多模块聚合工程，包含各服务对外提供的 Feign 接口定义（`{Name}RemoteService`），供调用方依赖引入 |
 
 ---
 
@@ -122,8 +122,8 @@ globs: [ "**/*.java", "**/*.xml", "**/*.yml", "**/*.yaml" ]
 
 前端应用
   → API 网关
-    → 门面服务层（mall-admin / mall-tob-service / mall-toc-service / mall-ai）
-        → 应用服务层（mall-agent-employee-service / mall-merchant）
+    → 门面服务层（{facade-service} / {facade-service-3} / {facade-service-2} / {facade-service-4}）
+        → 应用服务层（{app-service} / mall-merchant）
             → 基础业务数据服务层（mall-product / mall-history-conversation / mall-client / mall-basic-service）
                 → 基础数据服务层（直接聚合数据，弱依赖场景）
 
@@ -144,7 +144,7 @@ globs: [ "**/*.java", "**/*.xml", "**/*.yml", "**/*.yaml" ]
 | 应用服务 | 其他应用服务、基础业务数据服务 | 门面服务 |
 | 基础数据服务 | 基础配置（mall-basic-service） | 门面服务、应用服务、其他基础数据服务 |
 
-> 所有跨服务调用必须通过 **OpenFeign** 实现，调用接口定义统一放在 `mall-inner-api` 工程对应子模块中。
+> 所有跨服务调用必须通过 **OpenFeign** 实现，调用接口定义统一放在 `{inner-api-service}` 工程对应子模块中。
 
 ---
 
@@ -159,10 +159,10 @@ API 网关（鉴权、限流、路由）
   ▼ HTTP
 门面服务 Controller（参数校验 @Valid）
   │
-  ▼ 调用 XxxApplicationService
+  ▼ 调用 {Name}ApplicationService
 门面服务 ApplicationService（第一层编排：聚合多个后端数据，组装 VO/Response）
   │
-  ▼ Feign RPC（通过 mall-inner-api 中定义的 XxxRemoteService）
+  ▼ Feign RPC（通过 {inner-api-service} 中定义的 {Name}RemoteService）
 应用服务 Controller → ApplicationService → QueryService/ManageService → Mapper/DB
   │（可选，强依赖场景）
   ▼ Feign RPC
@@ -171,14 +171,14 @@ API 网关（鉴权、限流、路由）
 
 ---
 
-## 5. mall-inner-api 工程规范
+## 5. {inner-api-service} 工程规范
 
-`mall-inner-api` 是 Feign 接口的聚合声明工程，结构如下：
+`{inner-api-service}` 是 Feign 接口的聚合声明工程，结构如下：
 
 ```
-mall-inner-api/
+{inner-api-service}/
 ├── mall-account-api/       # 财务模块 Feign 接口
-├── mall-admin-api/         # 管理端模块 Feign 接口
+├── {facade-service}-api/         # 管理端模块 Feign 接口
 ├── mall-basic-api/         # 基础配置模块 Feign 接口
 ├── mall-client-api/        # 用户模块 Feign 接口
 ├── mall-merchant-api/      # 商家模块 Feign 接口
@@ -199,13 +199,13 @@ mall-{module}-api/
 └── src/main/java/com/aim/mall/{module}/api/
     ├── dto/
     │   ├── request/          # ApiRequest 定义
-    │   │   └── XxxApiRequest.java
+    │   │   └── {Name}ApiRequest.java
     │   └── response/         # ApiResponse 定义
-    │       └── XxxApiResponse.java
+    │       └── {Name}ApiResponse.java
     ├── feign/                # Feign 接口定义
-    │   └── XxxRemoteService.java
+    │   └── {Name}RemoteService.java
     └── fallback/             # Feign 降级实现
-        └── XxxRemoteServiceFallback.java
+        └── {Name}RemoteServiceFallback.java
 ```
 
 ---
@@ -215,54 +215,54 @@ mall-{module}-api/
 ### 6.1 门面服务代码结构
 
 ```
-mall-admin/src/main/java/com/aim/mall/admin/
+{facade-service}/src/main/java/com/aim/mall/admin/
 ├── controller/
 │   └── {domain}/              # 按业务域分子目录
-│       └── XxxAdminController.java
+│       └── {Name}AdminController.java
 ├── service/
-│   ├── XxxApplicationService.java      # 接口
+│   ├── {Name}ApplicationService.java      # 接口
 │   └── impl/
-│       └── XxxApplicationServiceImpl.java  # 实现
+│       └── {Name}ApplicationServiceImpl.java  # 实现
 ├── dto/
 │   ├── request/{domain}/       # 请求 DTO
-│   │   └── XxxRequest.java
+│   │   └── {Name}Request.java
 │   └── response/{domain}/      # 响应 DTO
-│       ├── XxxResponse.java
-│       └── XxxVO.java
+│       ├── {Name}Response.java
+│       └── {Name}VO.java
 └── convertor/
-    └── XxxConvertor.java       # 对象转换器
+    └── {Name}Convertor.java       # 对象转换器
 ```
 
 ### 6.2 应用服务代码结构
 
 ```
-mall-agent-employee-service/src/main/java/com/aim/mall/agent/employee/
+{app-service}/src/main/java/com/aim/mall/{domain}/employee/
 ├── controller/
 │   └── inner/                  # 内部 Controller，不分子目录
-│       └── XxxInnerController.java
+│       └── {Name}InnerController.java
 ├── service/
 │   ├── mp/                     # MyBatis-Plus Service
-│   │   └── AimXxxService.java
-│   ├── XxxApplicationService.java      # 应用服务接口
-│   ├── XxxQueryService.java            # 查询服务接口
-│   └── XxxManageService.java           # 管理服务接口
+│   │   └── Aim{Name}Service.java
+│   ├── {Name}ApplicationService.java      # 应用服务接口
+│   ├── {Name}QueryService.java            # 查询服务接口
+│   └── {Name}ManageService.java           # 管理服务接口
 ├── service/impl/
 │   ├── mp/                     # MP Service 实现
-│   │   └── AimXxxServiceImpl.java
-│   ├── XxxApplicationServiceImpl.java
-│   ├── XxxQueryServiceImpl.java
-│   └── XxxManageServiceImpl.java
+│   │   └── Aim{Name}ServiceImpl.java
+│   ├── {Name}ApplicationServiceImpl.java
+│   ├── {Name}QueryServiceImpl.java
+│   └── {Name}ManageServiceImpl.java
 ├── mapper/
-│   └── AimXxxMapper.java
+│   └── Aim{Name}Mapper.java
 ├── domain/
 │   ├── entity/                 # DO 实体
-│   │   └── AimXxxDO.java
+│   │   └── Aim{Name}DO.java
 │   └── dto/                    # 内部 DTO
-│       ├── XxxApiRequest.java
-│       ├── XxxApiResponse.java
-│       └── XxxQuery.java
+│       ├── {Name}ApiRequest.java
+│       ├── {Name}ApiResponse.java
+│       └── {Name}Query.java
 └── convertor/
-    └── XxxConvertor.java
+    └── {Name}Convertor.java
 ```
 
 ---
@@ -293,7 +293,7 @@ mall-agent-employee-service/src/main/java/com/aim/mall/agent/employee/
 
 直接承接前端请求的服务层，作为系统对外唯一入口（Backend For Frontend）。
 
-包括：`mall-admin`、`mall-tob-service`、`mall-toc-service`、`mall-ai`。
+包括：`{facade-service}`、`{facade-service-3}`、`{facade-service-2}`、`{facade-service-4}`。
 
 接口路径前缀：`/admin/api/v1/`、`/merchant/api/v1/`、`/app/api/v1/`、`/ai/api/v1/`。
 
@@ -301,7 +301,7 @@ mall-agent-employee-service/src/main/java/com/aim/mall/agent/employee/
 
 承载核心业务逻辑的后端服务，仅通过 Feign RPC 被调用，不对前端直接暴露。
 
-包括：`mall-agent-employee-service`、`mall-merchant`。
+包括：`{app-service}`、`mall-merchant`。
 
 接口路径前缀：`/inner/api/v1/`。
 
@@ -317,12 +317,12 @@ mall-agent-employee-service/src/main/java/com/aim/mall/agent/employee/
 
 门面服务内按业务分类的子目录单元，用于 Controller/DTO 的目录分层。
 
-示例：`agent`、`merchant`、`user`、`trade`。
+示例：`{domain}`、`merchant`、`user`、`trade`。
 
 ### 8.5 业务域前缀（Domain Prefix）
 
 应用服务/基础数据服务内用于区分不同业务模块的类名前缀。
 
-示例：`AgentScript`、`JobType`、`ScriptTemplate`。
+示例：`{Domain}Script`、`{Name}`、`ScriptTemplate`。
 
 用法：`{prefix}QueryService`、`{prefix}ManageService`、`{prefix}InnerController`。

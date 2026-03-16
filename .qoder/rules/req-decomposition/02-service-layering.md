@@ -17,19 +17,19 @@ alwaysApply: false
 
 | 层级 | 标识 | 对应服务 | 职责 |
 |------|------|----------|------|
-| 门面层 | `facade` | mall-admin, mall-tob-service, mall-toc-service, mall-ai | 接口暴露、参数校验、数据聚合 |
-| 应用层 | `application` | mall-agent-employee-service, mall-merchant | 业务逻辑、流程编排 |
+| 门面层 | `facade` | {facade-service}, {facade-service-3}, {facade-service-2}, {facade-service-4} | 接口暴露、参数校验、数据聚合 |
+| 应用层 | `application` | {app-service}, mall-merchant | 业务逻辑、流程编排 |
 | 数据层 | `data` | mall-product, mall-client, mall-basic-service, mall-history-conversation | 数据访问、原子操作 |
 
 ### 1.2 服务清单
 
 | 服务 | 层级 | 职责描述 |
 |------|------|----------|
-| mall-admin | facade | 平台管理端 BFF |
-| mall-tob-service | facade | 商家管理端 BFF |
-| mall-toc-service | facade | 消费者 APP 端 BFF |
-| mall-ai | facade | AI 对话 BFF |
-| mall-agent-employee-service | application | 智能体员工核心业务 |
+| {facade-service} | facade | 平台管理端 BFF |
+| {facade-service-3} | facade | 商家管理端 BFF |
+| {facade-service-2} | facade | 消费者 APP 端 BFF |
+| {facade-service-4} | facade | AI 对话 BFF |
+| {app-service} | application | 智能体{关联实体}核心业务 |
 | mall-merchant | application | 商家/商品管理 |
 | mall-product | data | 商品基础数据 |
 | mall-client | data | 用户/客户数据 |
@@ -50,7 +50,7 @@ Feature 内部分层调用：
 │  - Controller + VO                  │
 │  - 调用 ApplicationService          │
 └──────────────┬──────────────────────┘
-               │ Feign (mall-inner-api)
+               │ Feign ({inner-api-service})
                ▼
 ┌─────────────────────────────────────┐
 │  应用层 (application)                │
@@ -58,7 +58,7 @@ Feature 内部分层调用：
 │  - 业务逻辑编排                      │
 │  - 调用数据层 RemoteService          │
 └──────────────┬──────────────────────┘
-               │ Feign (mall-inner-api)
+               │ Feign ({inner-api-service})
                ▼
 ┌─────────────────────────────────────┐
 │  数据层 (data)                       │
@@ -98,7 +98,7 @@ Feature 内部分层调用：
 
 ```yaml
 api_definitions:
-  - module: mall-product-api           # mall-inner-api 子模块
+  - module: mall-product-api           # {inner-api-service} 子模块
     feign: UserRemoteService           # Feign Client 类名
     base_path: /inner/api/v1/user      # 基础路径
     
@@ -134,7 +134,7 @@ api_definitions:
 
 | 角色 | 职责 | 代码位置 |
 |------|------|----------|
-| 接口定义 | 定义 Feign 接口、DTO | `mall-inner-api/{module}-api/` |
+| 接口定义 | 定义 Feign 接口、DTO | `{inner-api-service}/{module}-api/` |
 | 接口实现 | 实现 Controller | 被调用服务的 `controller/inner/` |
 | 接口调用 | 注入 RemoteService | 调用方的 ApplicationService |
 
@@ -166,7 +166,7 @@ api_definitions:
 
 **核心规则**：
 
-- **模块内关联**（引用 id 所属表与当前表在**同一服务**内）：`ApiResponse` 必须同时返回 `id` 和对应的 `name`（即 `XxxId` + `XxxName`），由**当前模块的 ApplicationService 层**负责在构建 ApiResponse 时就近填充
+- **模块内关联**（引用 id 所属表与当前表在**同一服务**内）：`ApiResponse` 必须同时返回 `id` 和对应的 `name`（即 `{Name}Id` + `{Name}Name`），由**当前模块的 ApplicationService 层**负责在构建 ApiResponse 时就近填充
 - **跨模块关联**（引用 id 所属表在**另一个服务**内）：`ApiResponse` 仅返回 `id`；门面服务需要名称时，在门面层 ApplicationService 中通过 Feign 调用对方服务获取并组装
 
 **决策树**：
@@ -175,8 +175,8 @@ api_definitions:
 需要在列表/详情中展示名称字段？
     ↓
 该 id 关联的表是否在当前服务模块内？
-    ├─ 是（模块内关联）→ 在本模块 ApplicationService 的 convertToApiResponse() 中就近填充 XxxName
-    │                   ApiResponse 同时包含 XxxId + XxxName
-    └─ 否（跨模块关联）→ ApiResponse 只返回 XxxId
+    ├─ 是（模块内关联）→ 在本模块 ApplicationService 的 convertToApiResponse() 中就近填充 {Name}Name
+    │                   ApiResponse 同时包含 {Name}Id + {Name}Name
+    └─ 否（跨模块关联）→ ApiResponse 只返回 {Name}Id
                         门面层 ApplicationService 发起 Feign 调用填充名称
 ```

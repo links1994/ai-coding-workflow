@@ -6,7 +6,7 @@ globs: [ "**/*.java" ]
 
 # 门面服务代码生成规范
 
-> **适用服务**：mall-admin / mall-tob-service / mall-toc-service / mall-ai
+> **适用服务**：{facade-service} / {facade-service-3} / {facade-service-2} / {facade-service-4}
 
 ---
 
@@ -19,7 +19,7 @@ globs: [ "**/*.java" ]
 ```
 Controller（接口层，参数校验）
     ↓ 只调用 ApplicationService
-XxxApplicationService（编排层，数据聚合 & VO 组装）
+{Name}ApplicationService（编排层，数据聚合 & VO 组装）
     ↓ 通过 RemoteService（Feign）调用
 应用服务 / 基础数据服务
 ```
@@ -28,16 +28,16 @@ XxxApplicationService（编排层，数据聚合 & VO 组装）
 
 | 层级 | 命名规范 | 职责 | 严禁 |
 |----------------------|-------------------------------------------------------|--------------------------------------|-----------------------------------------------|
-| Controller | `XxxAdminController` / `XxxAppController` | 接收请求、参数校验、调用 ApplicationService、包装响应 | 禁止直接注入并调用 RemoteService；禁止业务逻辑；禁止 DTO 转换 |
-| ApplicationService | `XxxApplicationService` / `XxxApplicationServiceImpl` | 业务编排、聚合多个 Feign 调用、数据转换、VO 组装 | 禁止直接访问数据库（Mapper/Repository）；禁止创建本地 Feign 包装类 |
-| RemoteService（Feign） | 引用 `mall-inner-api` 中定义的 `XxxRemoteService` | 远程服务调用 | 禁止在门面服务中新建 feign 目录或本地 Feign 客户端 |
+| Controller | `{Name}AdminController` / `{Name}AppController` | 接收请求、参数校验、调用 ApplicationService、包装响应 | 禁止直接注入并调用 RemoteService；禁止业务逻辑；禁止 DTO 转换 |
+| ApplicationService | `{Name}ApplicationService` / `{Name}ApplicationServiceImpl` | 业务编排、聚合多个 Feign 调用、数据转换、VO 组装 | 禁止直接访问数据库（Mapper/Repository）；禁止创建本地 Feign 包装类 |
+| RemoteService（Feign） | 引用 `{inner-api-service}` 中定义的 `{Name}RemoteService` | 远程服务调用 | 禁止在门面服务中新建 feign 目录或本地 Feign 客户端 |
 
 **常见错误（❌ 必须避免）**：
 
-- ❌ Controller 中直接注入 `XxxRemoteService` 并调用
+- ❌ Controller 中直接注入 `{Name}RemoteService` 并调用
 - ❌ Controller 中进行 DTO 转换和业务编排
 - ❌ 门面服务中存在 `feign/` 目录
-- ❌ 门面服务中创建本地 `XxxFeignClient` 包装类
+- ❌ 门面服务中创建本地 `{Name}FeignClient` 包装类
 
 ---
 
@@ -48,7 +48,7 @@ XxxApplicationService（编排层，数据聚合 & VO 组装）
 | 层级 | 校验方式 | 说明 |
 |--------------------------|------------------------------------------------|-------------------------|
 | 门面服务 Controller | 使用 `jakarta.validation`（`@Valid`、`@NotNull` 等） | 自动校验，快速失败 |
-| 应用服务 / 基础数据服务 Controller | **禁止使用 `jakarta.validation`**，必须手动校验 | 手动编写 `validateXxx()` 方法 |
+| 应用服务 / 基础数据服务 Controller | **禁止使用 `jakarta.validation`**，必须手动校验 | 手动编写 `validate{Name}()` 方法 |
 
 ### 2.2 完整差异对比
 
@@ -57,10 +57,10 @@ XxxApplicationService（编排层，数据聚合 & VO 组装）
 | 路径参数 | 允许，最多 1 个，且必须放在 URL 最后 | **严禁**使用 `@PathVariable` |
 | HTTP 方法 | 完整 RESTful（GET / POST / PUT / DELETE） | 仅 GET / POST，禁止 PUT / DELETE |
 | 参数传递 | GET 用 `@RequestParam`；POST/PUT/DELETE 用 `@RequestBody` | ≤ 2 个基础类型用 `@RequestParam`；其他一律用 `@RequestBody` |
-| 参数校验 | 使用 `@Valid` + `jakarta.validation` 注解 | **禁止 `@Valid`**，手动编写 `validateXxx()` 方法 |
-| 请求对象 | `XxxRequest`（前端请求） | `XxxApiRequest`（写操作必含 `operatorId` 字段） |
-| 返回对象 | `XxxResponse` / `XxxVO`（含 `@JsonFormat`） | `XxxApiResponse`（含 `@JsonFormat`） |
-| Controller 命名 | `XxxAdminController` / `XxxAppController` / `XxxMerchantController` | `XxxInnerController` |
+| 参数校验 | 使用 `@Valid` + `jakarta.validation` 注解 | **禁止 `@Valid`**，手动编写 `validate{Name}()` 方法 |
+| 请求对象 | `{Name}Request`（前端请求） | `{Name}ApiRequest`（写操作必含 `operatorId` 字段） |
+| 返回对象 | `{Name}Response` / `{Name}VO`（含 `@JsonFormat`） | `{Name}ApiResponse`（含 `@JsonFormat`） |
+| Controller 命名 | `{Name}AdminController` / `{Name}AppController` / `{Name}MerchantController` | `{Name}InnerController` |
 | 包路径 | `controller/admin/` 或 `controller/app/` 等 | `controller/inner/` |
 | 路径前缀 | `/admin/api/v1/` 等 | `/inner/api/v1/` |
 | operatorId 来源 | 解析 Header → 写入 ApiRequest | 从 `ApiRequest.operatorId` 获取 |
@@ -69,21 +69,21 @@ XxxApplicationService（编排层，数据聚合 & VO 组装）
 
 ```java
 @PostMapping("/create")
-public CommonResult<Long> create(@RequestBody JobTypeCreateApiRequest request) {
+public CommonResult<Long> create(@RequestBody {Name}CreateApiRequest request) {
     validateCreateRequest(request);
     Long operatorId = request.getOperatorId();
     // ... 业务逻辑
 }
 
-private void validateCreateRequest(JobTypeCreateApiRequest request) {
+private void validateCreateRequest({Name}CreateApiRequest request) {
     if (request == null) {
-        throw new BusinessException(AgentErrorCodeEnum.PARAM_ERROR, "请求参数不能为空");
+        throw new BusinessException({Domain}ErrorCodeEnum.PARAM_ERROR, "请求参数不能为空");
     }
     if (StringUtils.isBlank(request.getName())) {
-        throw new BusinessException(AgentErrorCodeEnum.PARAM_ERROR, "名称不能为空");
+        throw new BusinessException({Domain}ErrorCodeEnum.PARAM_ERROR, "名称不能为空");
     }
     if (request.getOperatorId() == null) {
-        throw new BusinessException(AgentErrorCodeEnum.PARAM_ERROR, "操作人ID不能为空");
+        throw new BusinessException({Domain}ErrorCodeEnum.PARAM_ERROR, "操作人ID不能为空");
     }
 }
 ```
@@ -94,14 +94,14 @@ private void validateCreateRequest(JobTypeCreateApiRequest request) {
 // ❌ 错误：应用服务禁止使用 @Valid
 @RequestBody
 @Valid
-JobTypeCreateApiRequest request
+{Name}CreateApiRequest request
 
 // ❌ 错误：应用服务禁止直接解析 Header
 @RequestHeader(AuthConstant.USER_TOKEN_HEADER)
 String user
 
-// ❌ 错误：应用服务 Controller 缺少 validateXxx() 方法
-public CommonResult<Long> create(@RequestBody JobTypeCreateApiRequest request) {
+// ❌ 错误：应用服务 Controller 缺少 validate{Name}() 方法
+public CommonResult<Long> create(@RequestBody {Name}CreateApiRequest request) {
     // 直接进入业务逻辑，无参数校验
 }
 ```
@@ -110,7 +110,7 @@ public CommonResult<Long> create(@RequestBody JobTypeCreateApiRequest request) {
 
 ## 3. String 参数去空格转换规范
 
-**适用对象**：门面服务（mall-admin / mall-tob-service / mall-toc-service / mall-ai）的 ApplicationService 层
+**适用对象**：门面服务（{facade-service} / {facade-service-3} / {facade-service-2} / {facade-service-4}）的 ApplicationService 层
 
 **核心原则**：门面服务从前端接收的 String 类型参数，在传递给下游方法前必须进行去空格处理。
 
@@ -144,16 +144,16 @@ public CommonResult<Long> create(@RequestBody JobTypeCreateApiRequest request) {
 // ✅ 正确：ApplicationService 层统一去空格
 @Service
 @RequiredArgsConstructor
-public class AgentApplicationServiceImpl implements AgentApplicationService {
-    private final AgentQueryService agentQueryService;
+public class {Domain}ApplicationServiceImpl implements {Domain}ApplicationService {
+    private final {Domain}QueryService {domain}QueryService;
 
-    public CommonResult<AgentResponse> getAgentByName(String name) {
+    public CommonResult<{Domain}Response> get{Domain}ByName(String name) {
         // ApplicationService 层进行去空格转换
         String trimmedName = StringUtils.trim(name);
-        return agentQueryService.getAgentByName(trimmedName);
+        return {domain}QueryService.get{Domain}ByName(trimmedName);
     }
 
-    public CommonResult.PageData<AgentResponse> pageAgents(
+    public CommonResult.PageData<{Domain}Response> page{Domain}s(
             String keyword,
             String sortBy,
             String status) {
@@ -162,28 +162,28 @@ public class AgentApplicationServiceImpl implements AgentApplicationService {
         String trimmedSortBy = StringUtils.trim(sortBy);
         String trimmedStatus = StringUtils.trim(status);
 
-        AgentPageQuery query = new AgentPageQuery();
+        {Domain}PageQuery query = new {Domain}PageQuery();
         query.setKeyword(trimmedKeyword);
         query.setSortBy(trimmedSortBy);
         query.setStatus(trimmedStatus);
 
-        return agentQueryService.pageAgents(query);
+        return {domain}QueryService.page{Domain}s(query);
     }
 }
 
 // ❌ 错误：未去空格直接传递
-public CommonResult<AgentResponse> getAgentByName(String name) {
+public CommonResult<{Domain}Response> get{Domain}ByName(String name) {
     // 直接将原始参数传递给下游，可能导致查询结果不准确
-    return agentQueryService.getAgentByName(name);
+    return {domain}QueryService.get{Domain}ByName(name);
 }
 
 // ❌ 错误：在 Controller 层去空格
 @PostMapping("/search")
-public CommonResult<AgentResponse> searchAgent(
-        @RequestBody @Valid AgentSearchRequest request) {
+public CommonResult<{Domain}Response> search{Domain}(
+        @RequestBody @Valid {Domain}SearchRequest request) {
     // 不应该在 Controller 层做去空格逻辑
     String trimmedKeyword = StringUtils.trim(request.getKeyword());
-    return agentApplicationService.searchAgent(trimmedKeyword);
+    return {domain}ApplicationService.search{Domain}(trimmedKeyword);
 }
 ```
 
@@ -210,16 +210,16 @@ String trimmedToEmpty = StringUtils.defaultString(StringUtils.trim(str), "");  /
 去空格后应立即进行参数校验：
 
 ```java
-public CommonResult<AgentResponse> getAgentByCode(String code) {
+public CommonResult<{Domain}Response> get{Domain}ByCode(String code) {
     // Step 1: 去空格
     String trimmedCode = StringUtils.trim(code);
 
     // Step 2: 校验（去空格后检查）
     if (StringUtils.isBlank(trimmedCode)) {
-        throw new BusinessException(AgentErrorCodeEnum.PARAM_ERROR, "岗位代码不能为空");
+        throw new BusinessException({Domain}ErrorCodeEnum.PARAM_ERROR, "{业务实体}代码不能为空");
     }
 
     // Step 3: 传递给下游
-    return agentQueryService.getAgentByCode(trimmedCode);
+    return {domain}QueryService.get{Domain}ByCode(trimmedCode);
 }
 ```

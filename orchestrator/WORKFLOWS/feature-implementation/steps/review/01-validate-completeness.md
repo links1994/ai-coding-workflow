@@ -44,7 +44,7 @@ acceptance_criteria:
         
   - criteria: "返回该岗位下关联员工数"
     validation:
-      - check: "JobTypeApiResponse 包含 employeeCount 字段"
+      - check: "{Name}ApiResponse 包含 employeeCount 字段"
         status: ✅
       - check: "ApplicationService 中填充 employeeCount"
         status: ✅
@@ -70,8 +70,8 @@ acceptance_criteria:
 
 | 服务 | 分层 | 代码生成状态 | 缺失文件 |
 |------|------|--------------|----------|
-| mall-admin | facade | ✅ | - |
-| mall-agent-employee-service | application | ✅ | - |
+| {facade-service} | facade | ✅ | - |
+| {app-service} | application | ✅ | - |
 
 ### 4. 数据库表覆盖检查
 
@@ -79,7 +79,7 @@ acceptance_criteria:
 
 | 表名 | Entity | Mapper | SQL | 状态 |
 |------|--------|--------|-----|------|
-| aim_agent_job_type | ✅ | ✅ | ✅ | 完整 |
+| {table_name} | ✅ | ✅ | ✅ | 完整 |
 
 ### 5. 接口一致性检查
 
@@ -87,8 +87,8 @@ acceptance_criteria:
 
 | 接口 | Facade Request | Feign ApiRequest | 字段一致性 |
 |------|----------------|------------------|------------|
-| create | JobTypeCreateRequest | JobTypeCreateApiRequest | ✅ |
-| update | JobTypeUpdateRequest | JobTypeUpdateApiRequest | ✅ |
+| create | {Name}CreateRequest | {Name}CreateApiRequest | ✅ |
+| update | {Name}UpdateRequest | {Name}UpdateApiRequest | ✅ |
 
 ## 完整性报告格式
 
@@ -128,14 +128,14 @@ completeness_check:
     - criteria: "支持岗位CRUD操作"
       status: passed
       evidence:
-        - "JobTypeAdminController 包含 create/update/delete/getById/page 方法"
-        - "JobTypeInnerController 包含对应方法"
+        - "{Name}AdminController 包含 create/update/delete/getById/page 方法"
+        - "{Name}InnerController 包含对应方法"
         
     - criteria: "返回该岗位下关联员工数"
       status: passed
       evidence:
-        - "JobTypeApiResponse.employeeCount 字段存在"
-        - "JobTypeApplicationServiceImpl.convertToApiResponse() 中填充 employeeCount"
+        - "{Name}ApiResponse.employeeCount 字段存在"
+        - "{Name}ApplicationServiceImpl.convertToApiResponse() 中填充 employeeCount"
         
     - criteria: "启用/禁用状态正确联动"
       status: passed
@@ -152,11 +152,11 @@ completeness_check:
   service_coverage:
     status: passed
     services:
-      - name: mall-admin
+      - name: {facade-service}
         layer: facade
         files_generated: 6
         status: complete
-      - name: mall-agent-employee-service
+      - name: {app-service}
         layer: application
         files_generated: 12
         status: complete
@@ -164,7 +164,7 @@ completeness_check:
   database_coverage:
     status: passed
     tables:
-      - name: aim_agent_job_type
+      - name: {table_name}
         entity: ✅
         mapper: ✅
         sql: ✅

@@ -15,31 +15,31 @@
 
 ### 1. InnerController
 
-**命名规范**：`XxxInnerController`
+**命名规范**：`{Name}InnerController`
 
 **示例**：
 ```java
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/inner/api/v1/job-type")
-public class JobTypeInnerController {
+public class {Name}InnerController {
     
-    private final JobTypeApplicationService jobTypeApplicationService;
+    private final {Name}ApplicationService jobTypeApplicationService;
     
     @PostMapping("/create")
-    public CommonResult<Long> create(@RequestBody JobTypeCreateApiRequest request) {
+    public CommonResult<Long> create(@RequestBody {Name}CreateApiRequest request) {
         validateCreateRequest(request);
         return jobTypeApplicationService.create(request);
     }
     
     @PostMapping("/update")
-    public CommonResult<Void> update(@RequestBody JobTypeUpdateApiRequest request) {
+    public CommonResult<Void> update(@RequestBody {Name}UpdateApiRequest request) {
         validateUpdateRequest(request);
         return jobTypeApplicationService.update(request);
     }
     
     @GetMapping("/detail")
-    public CommonResult<JobTypeApiResponse> getById(@RequestParam("id") Long id) {
+    public CommonResult<{Name}ApiResponse> getById(@RequestParam("id") Long id) {
         if (id == null) {
             throw new BusinessException(AgentErrorCodeEnum.PARAM_ERROR, "ID不能为空");
         }
@@ -47,14 +47,14 @@ public class JobTypeInnerController {
     }
     
     @PostMapping("/page")
-    public CommonResult<CommonResult.PageData<JobTypeApiResponse>> page(
-            @RequestBody JobTypePageApiRequest request) {
+    public CommonResult<CommonResult.PageData<{Name}ApiResponse>> page(
+            @RequestBody {Name}PageApiRequest request) {
         validatePageRequest(request);
         return jobTypeApplicationService.page(request);
     }
     
     // 手动校验方法
-    private void validateCreateRequest(JobTypeCreateApiRequest request) {
+    private void validateCreateRequest({Name}CreateApiRequest request) {
         if (request == null) {
             throw new BusinessException(AgentErrorCodeEnum.PARAM_ERROR, "请求参数不能为空");
         }
@@ -69,42 +69,42 @@ public class JobTypeInnerController {
 ```
 
 **约束**：
-- **禁止使用 `@Valid`**，必须手动编写 `validateXxx()` 方法
+- **禁止使用 `@Valid`**，必须手动编写 `validate{Name}()` 方法
 - **禁止使用 `@PathVariable`**，使用 `@RequestParam`
 - 仅支持 GET / POST，禁止 PUT / DELETE
 - 写操作请求对象必须继承 `operatorId`
 
 ### 2. ApplicationService
 
-**命名规范**：`XxxApplicationService` / `XxxApplicationServiceImpl`
+**命名规范**：`{Name}ApplicationService` / `{Name}ApplicationServiceImpl`
 
 **示例**：
 ```java
-public interface JobTypeApplicationService {
-    CommonResult<Long> create(JobTypeCreateApiRequest request);
-    CommonResult<Void> update(JobTypeUpdateApiRequest request);
-    CommonResult<JobTypeApiResponse> getById(Long id);
-    CommonResult<CommonResult.PageData<JobTypeApiResponse>> page(JobTypePageApiRequest request);
+public interface {Name}ApplicationService {
+    CommonResult<Long> create({Name}CreateApiRequest request);
+    CommonResult<Void> update({Name}UpdateApiRequest request);
+    CommonResult<{Name}ApiResponse> getById(Long id);
+    CommonResult<CommonResult.PageData<{Name}ApiResponse>> page({Name}PageApiRequest request);
 }
 
 @Service
 @RequiredArgsConstructor
-public class JobTypeApplicationServiceImpl implements JobTypeApplicationService {
+public class {Name}ApplicationServiceImpl implements {Name}ApplicationService {
     
-    private final JobTypeQueryService jobTypeQueryService;
-    private final JobTypeManageService jobTypeManageService;
+    private final {Name}QueryService jobTypeQueryService;
+    private final {Name}ManageService jobTypeManageService;
     
     @Override
-    public CommonResult<Long> create(JobTypeCreateApiRequest request) {
+    public CommonResult<Long> create({Name}CreateApiRequest request) {
         // 业务编排
-        AimJobTypeDO entity = convertToDO(request);
+        Aim{Name}DO entity = convertToDO(request);
         jobTypeManageService.save(entity);
         return CommonResult.success(entity.getId());
     }
     
     @Override
-    public CommonResult<JobTypeApiResponse> getById(Long id) {
-        AimJobTypeDO entity = jobTypeQueryService.getById(id);
+    public CommonResult<{Name}ApiResponse> getById(Long id) {
+        Aim{Name}DO entity = jobTypeQueryService.getById(id);
         if (entity == null) {
             return CommonResult.success(null);
         }
@@ -112,14 +112,14 @@ public class JobTypeApplicationServiceImpl implements JobTypeApplicationService 
     }
     
     // 转换方法
-    private JobTypeApiResponse convertToApiResponse(AimJobTypeDO entity) {
-        JobTypeApiResponse response = new JobTypeApiResponse();
+    private {Name}ApiResponse convertToApiResponse(Aim{Name}DO entity) {
+        {Name}ApiResponse response = new {Name}ApiResponse();
         response.setId(entity.getId());
         response.setName(entity.getName());
         // ... 其他字段
         
         // 模块内关联字段就近填充
-        Integer employeeCount = jobTypeQueryService.countEmployeesByJobTypeId(entity.getId());
+        Integer employeeCount = jobTypeQueryService.countEmployeesBy{Name}Id(entity.getId());
         response.setEmployeeCount(employeeCount);
         
         return response;
@@ -129,7 +129,7 @@ public class JobTypeApplicationServiceImpl implements JobTypeApplicationService 
 
 ### 3. QueryService
 
-**命名规范**：`XxxQueryService` / `XxxQueryServiceImpl`
+**命名规范**：`{Name}QueryService` / `{Name}QueryServiceImpl`
 
 **职责**：
 - 只读查询操作
@@ -138,7 +138,7 @@ public class JobTypeApplicationServiceImpl implements JobTypeApplicationService 
 
 ### 4. ManageService
 
-**命名规范**：`XxxManageService` / `XxxManageServiceImpl`
+**命名规范**：`{Name}ManageService` / `{Name}ManageServiceImpl`
 
 **职责**：
 - 增删改操作
@@ -147,7 +147,7 @@ public class JobTypeApplicationServiceImpl implements JobTypeApplicationService 
 
 ### 5. Mapper
 
-**命名规范**：`AimXxxMapper`
+**命名规范**：`Aim{Name}Mapper`
 
 **约束**：
 - 所有查询走 XML
@@ -181,24 +181,24 @@ public class JobTypeApplicationServiceImpl implements JobTypeApplicationService 
 ## 输出文件结构
 
 ```
-mall-agent-employee-service/
+{app-service}/
 ├── controller/
 │   └── inner/
-│       └── JobTypeInnerController.java
+│       └── {Name}InnerController.java
 ├── service/
-│   ├── JobTypeApplicationService.java
-│   ├── JobTypeApplicationServiceImpl.java
-│   ├── JobTypeQueryService.java
-│   ├── JobTypeQueryServiceImpl.java
-│   ├── JobTypeManageService.java
-│   └── JobTypeManageServiceImpl.java
+│   ├── {Name}ApplicationService.java
+│   ├── {Name}ApplicationServiceImpl.java
+│   ├── {Name}QueryService.java
+│   ├── {Name}QueryServiceImpl.java
+│   ├── {Name}ManageService.java
+│   └── {Name}ManageServiceImpl.java
 ├── domain/
 │   └── entity/
-│       └── AimJobTypeDO.java
+│       └── Aim{Name}DO.java
 └── mapper/
-    ├── JobTypeMapper.java
+    ├── {Name}Mapper.java
     └── xml/
-        └── JobTypeMapper.xml
+        └── {Name}Mapper.xml
 ```
 
 ## 依赖检查

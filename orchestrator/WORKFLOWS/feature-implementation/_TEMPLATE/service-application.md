@@ -7,20 +7,20 @@
 ## 代码结构示例
 
 ```java
-package com.aim.mall.admin.service;
+package {base_package}.admin.service;
 
-import com.aim.mall.admin.dto.request.{Name}CreateRequest;
-import com.aim.mall.admin.dto.request.{Name}UpdateRequest;
-import com.aim.mall.admin.dto.request.{Name}ListRequest;
-import com.aim.mall.admin.dto.response.{Name}Response;
-import com.aim.mall.admin.dto.response.{Name}DetailVO;
-import com.aim.mall.agent.employee.api.dto.request.{Name}CreateApiRequest;
-import com.aim.mall.agent.employee.api.dto.request.{Name}UpdateApiRequest;
-import com.aim.mall.agent.employee.api.dto.request.{Name}ListApiRequest;
-import com.aim.mall.agent.employee.api.dto.response.{Name}ApiResponse;
-import com.aim.mall.agent.employee.api.feign.{Name}RemoteService;
-import com.aim.mall.common.core.result.CommonResult;
-import com.aim.mall.common.core.exception.RemoteApiCallException;
+import {base_package}.admin.dto.request.{Name}CreateRequest;
+import {base_package}.admin.dto.request.{Name}UpdateRequest;
+import {base_package}.admin.dto.request.{Name}ListRequest;
+import {base_package}.admin.dto.response.{Name}Response;
+import {base_package}.admin.dto.response.{Name}DetailVO;
+import {base_package}.{service}.api.dto.request.{Name}CreateApiRequest;
+import {base_package}.{service}.api.dto.request.{Name}UpdateApiRequest;
+import {base_package}.{service}.api.dto.request.{Name}ListApiRequest;
+import {base_package}.{service}.api.dto.response.{Name}ApiResponse;
+import {base_package}.{service}.api.feign.{Name}RemoteService;
+import {base_package}.common.core.result.CommonResult;
+import {base_package}.common.core.exception.RemoteApiCallException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -180,8 +180,8 @@ public class {Name}ApplicationServiceImpl implements {Name}ApplicationService {
 
 ## 命名规则
 
-| 元素 | 命名规范 | 示例 |
+| 元素 | 命名规范 | 说明 |
 |------|---------|------|
-| 接口名 | `{Name}ApplicationService` | `JobTypeApplicationService` |
-| 实现名 | `{Name}ApplicationServiceImpl` | `JobTypeApplicationServiceImpl` |
-| 包路径 | `service/` | `service/JobTypeApplicationService.java` |
+| 接口名 | `{Name}ApplicationService` | 业务实体名 + `ApplicationService` |
+| 实现名 | `{Name}ApplicationServiceImpl` | 接口名 + `Impl` |
+| 包路径 | `service/` | 统一放在 service 包下 |

@@ -10,7 +10,7 @@
 ### 1.1 门面接口约束（Facade Layer）
 
 **Controller 命名约束**：
-- 管理端 Controller 必须以 `AdminController` 结尾，如 `JobTypeAdminController`
+- 管理端 Controller 必须以 `AdminController` 结尾，如 `{Name}AdminController`
 - APP 端 Controller 必须以 `AppController` 结尾，如 `OrderAppController`
 - 商家端 Controller 必须以 `MerchantController` 结尾，如 `ProductMerchantController`
 
@@ -26,8 +26,8 @@
 - 写操作必须使用 `@Valid` 进行参数校验
 
 **响应约束**：
-- 响应必须使用门面层自定义的 Response DTO（`XxxResponse` / `XxxVO`）
-- 禁止使用 `XxxApiResponse` 直接暴露给前端
+- 响应必须使用门面层自定义的 Response DTO（`{Name}Response` / `{Name}VO`）
+- 禁止使用 `{Name}ApiResponse` 直接暴露给前端
 - `LocalDateTime` 字段必须标注 `@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")`
 
 **分层约束**：
@@ -38,7 +38,7 @@
 ### 1.2 内部接口约束（Inner/ Application Layer）
 
 **Controller 命名约束**：
-- 必须以 `InnerController` 结尾，如 `JobTypeInnerController`
+- 必须以 `InnerController` 结尾，如 `{Name}InnerController`
 
 **路径约束**：
 - 路径前缀必须是 `/inner/api/v1/`
@@ -47,11 +47,11 @@
 **参数约束**：
 - 参数 ≤ 2 个且为基础类型：使用 `@RequestParam`
 - 其他情况：一律使用 `@RequestBody`
-- 禁止使用 `@Valid` / `jakarta.validation`，改用手动 `validateXxx()` 方法
-- 操作人 ID 通过 `XxxApiRequest.operatorId` 接收，禁止解析 `@RequestHeader`
+- 禁止使用 `@Valid` / `jakarta.validation`，改用手动 `validate{Name}()` 方法
+- 操作人 ID 通过 `{Name}ApiRequest.operatorId` 接收，禁止解析 `@RequestHeader`
 
 **响应约束**：
-- 响应必须使用 `XxxApiResponse`（以 `ApiResponse` 结尾）
+- 响应必须使用 `{Name}ApiResponse`（以 `ApiResponse` 结尾）
 - 必须返回 `CommonResult<T>` 包装
 - `LocalDateTime` 字段标注 `@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")`
 - 实现 `Serializable`，`serialVersionUID = -1L`
@@ -62,7 +62,7 @@
 
 **分层约束**：
 - Controller 只能调用 `QueryService` 和 `ManageService`
-- 禁止直接注入 `Mapper` 或 `AimXxxService`
+- 禁止直接注入 `Mapper` 或 `Aim{Name}Service`
 
 ---
 
@@ -72,9 +72,9 @@
 
 | 类型 | 命名格式 | 示例 |
 |------|---------|------|
-| 请求 DTO | `{业务名}Request` | `JobTypeRequest` |
-| 响应 DTO | `{业务名}Response` | `JobTypeResponse` |
-| 列表响应 | `{业务名}VO` | `JobTypeVO` |
+| 请求 DTO | `{业务名}Request` | `{Name}Request` |
+| 响应 DTO | `{业务名}Response` | `{Name}Response` |
+| 列表响应 | `{业务名}VO` | `{Name}VO` |
 
 **约束**：
 - 必须实现 `Serializable`，`serialVersionUID = -1L`
@@ -85,8 +85,8 @@
 
 | 类型 | 命名格式 | 示例 |
 |------|---------|------|
-| 请求 DTO | `{业务名}ApiRequest` | `JobTypeApiRequest` |
-| 响应 DTO | `{业务名}ApiResponse` | `JobTypeApiResponse` |
+| 请求 DTO | `{业务名}ApiRequest` | `{Name}ApiRequest` |
+| 响应 DTO | `{业务名}ApiResponse` | `{Name}ApiResponse` |
 
 **约束**：
 - 必须实现 `Serializable`，`serialVersionUID = -1L`
@@ -101,8 +101,8 @@
 
 **门面层 ApplicationService**：
 - 只调用 `RemoteService`（Feign 接口）
-- 负责将 `XxxRequest` 转换为 `XxxApiRequest`
-- 负责将 `XxxApiResponse` 转换为 `XxxResponse`
+- 负责将 `{Name}Request` 转换为 `{Name}ApiRequest`
+- 负责将 `{Name}ApiResponse` 转换为 `{Name}Response`
 - String 参数在入口处统一去空格
 
 **应用层 ApplicationService**：
@@ -124,15 +124,15 @@
 - 所有查询 SQL 必须包含删除过滤条件
 
 **依赖约束**：
-- 同一实现类中禁止同时注入 `AimXxxService` 和 `AimXxxMapper`，必须二选一
-- 注入 `AimXxxService` 接口，禁止注入实现类
-- 禁止调用 `aimXxxService.getBaseMapper()`
+- 同一实现类中禁止同时注入 `Aim{Name}Service` 和 `Aim{Name}Mapper`，必须二选一
+- 注入 `Aim{Name}Service` 接口，禁止注入实现类
+- 禁止调用 `aim{Name}Service.getBaseMapper()`
 - 禁止发起 Feign 远程调用
 
 **命名约束**：
 - 接口名：`{Name}QueryService`
 - 实现名：`{Name}QueryServiceImpl`
-- 入参使用 `XxxQuery` / `XxxPageQuery`，不接受 `XxxRequest`
+- 入参使用 `{Name}Query` / `{Name}PageQuery`，不接受 `{Name}Request`
 
 ### 3.3 ManageService 约束
 
@@ -143,13 +143,13 @@
 - 写操作方法必须标注 `@Transactional(rollbackFor = Exception.class)`
 
 **依赖约束**：
-- 同一实现类中禁止同时注入 `AimXxxService` 和 `AimXxxMapper`
+- 同一实现类中禁止同时注入 `Aim{Name}Service` 和 `Aim{Name}Mapper`
 - 禁止发起 Feign 远程调用
 
 **命名约束**：
 - 接口名：`{Name}ManageService`
 - 实现名：`{Name}ManageServiceImpl`
-- 入参使用 `XxxApiRequest`，必须包含 `operatorId`
+- 入参使用 `{Name}ApiRequest`，必须包含 `operatorId`
 
 ---
 
@@ -160,7 +160,7 @@
 **命名约束**：
 - 类名严格遵循 `Aim{Name}DO` 格式
 - 表名 `aim_{模块}_{业务名}` → 类名 `Aim{模块首字母大驼峰}{业务名首字母大驼峰}DO`
-- 示例：`aim_agent_job_type` → `AimAgentJobTypeDO`
+- 示例：`{table_name}` → `Aim{Domain}{Name}DO`
 
 **字段约束**：
 - 必须包含基础通用字段：`id`（BIGINT）、`createTime`、`updateTime`
@@ -179,9 +179,9 @@
 ### 4.2 Mapper 约束
 
 **命名约束**：
-- Mapper 必须以 `Aim` 开头，如 `AimJobTypeMapper`
-- MP Service 接口位于 `service/mp/`，命名为 `AimXxxService`
-- MP Service 实现位于 `service/impl/mp/`，命名为 `AimXxxServiceImpl`
+- Mapper 必须以 `Aim` 开头，如 `Aim{Name}Mapper`
+- MP Service 接口位于 `service/mp/`，命名为 `Aim{Name}Service`
+- MP Service 实现位于 `service/impl/mp/`，命名为 `Aim{Name}ServiceImpl`
 
 **XML 约束**：
 - 文件名：`Aim{Name}Mapper.xml`
@@ -221,12 +221,12 @@
 - 方法签名与对应 InnerController 完全一致
 
 **参数约束**：
-- 请求参数使用 `XxxApiRequest`
+- 请求参数使用 `{Name}ApiRequest`
 - 禁止使用 `@PathVariable`
 
 **响应约束**：
 - 返回类型为 `CommonResult<T>`
-- 响应参数使用 `XxxApiResponse`
+- 响应参数使用 `{Name}ApiResponse`
 
 **路径约束**：
 - 路径前缀为 `/inner/api/v1/`

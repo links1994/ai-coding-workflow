@@ -26,7 +26,7 @@ feature:
   
   # 功能涉及的服务分层
   services:
-    - name: mall-admin         # 服务名
+    - name: {facade-service}         # 服务名
       layer: facade            # 层级：facade/application/data
       scope: 负责范围描述
       interfaces:              # 接口列表（仅门面层）
@@ -34,7 +34,7 @@ feature:
           path: /admin/api/v1/xxx
           description: 接口描述
       
-    - name: mall-agent
+    - name: mall-{domain}
       layer: application
       scope: 业务逻辑实现
       dependencies:            # 依赖的其他服务
@@ -46,10 +46,10 @@ feature:
       tables:                  # 涉及的数据表
         - aim_xxx
   
-  # 跨服务接口定义（mall-inner-api）
+  # 跨服务接口定义（{inner-api-service}）
   api_definitions:
     - module: mall-product-api
-      feign: XxxRemoteService
+      feign: {Name}RemoteService
       methods:
         - signature: ApiResponse methodName(params)
           description: 方法描述

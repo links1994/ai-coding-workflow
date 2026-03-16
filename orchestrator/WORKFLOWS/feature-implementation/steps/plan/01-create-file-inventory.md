@@ -16,37 +16,37 @@
 
 | 文件类型 | 命名规范 | 路径模式 |
 |----------|----------|----------|
-| Entity/DO | `AimXxxDO` | `domain/entity/` |
-| Mapper Interface | `AimXxxMapper` | `mapper/` |
-| Mapper XML | `AimXxxMapper.xml` | `mapper/xml/` |
-| QueryService | `XxxQueryService` / `Impl` | `service/` |
-| ManageService | `XxxManageService` / `Impl` | `service/` |
-| InnerController | `XxxInnerController` | `controller/inner/` |
+| Entity/DO | `Aim{Name}DO` | `domain/entity/` |
+| Mapper Interface | `Aim{Name}Mapper` | `mapper/` |
+| Mapper XML | `Aim{Name}Mapper.xml` | `mapper/xml/` |
+| QueryService | `{Name}QueryService` / `Impl` | `service/` |
+| ManageService | `{Name}ManageService` / `Impl` | `service/` |
+| InnerController | `{Name}InnerController` | `controller/inner/` |
 
 ### 2. Application 层文件（应用服务）
 
 | 文件类型 | 命名规范 | 路径模式 |
 |----------|----------|----------|
-| Entity/DO | `AimXxxDO` | `domain/entity/` |
-| Mapper Interface | `AimXxxMapper` | `mapper/` |
-| Mapper XML | `AimXxxMapper.xml` | `mapper/xml/` |
-| QueryService | `XxxQueryService` / `Impl` | `service/` |
-| ManageService | `XxxManageService` / `Impl` | `service/` |
-| ApplicationService | `XxxApplicationService` / `Impl` | `service/` |
-| InnerController | `XxxInnerController` | `controller/inner/` |
-| Feign ApiRequest | `XxxApiRequest` | `mall-inner-api/request/` |
-| Feign ApiResponse | `XxxApiResponse` | `mall-inner-api/response/` |
-| RemoteService | `XxxRemoteService` | `mall-inner-api/feign/` |
+| Entity/DO | `Aim{Name}DO` | `domain/entity/` |
+| Mapper Interface | `Aim{Name}Mapper` | `mapper/` |
+| Mapper XML | `Aim{Name}Mapper.xml` | `mapper/xml/` |
+| QueryService | `{Name}QueryService` / `Impl` | `service/` |
+| ManageService | `{Name}ManageService` / `Impl` | `service/` |
+| ApplicationService | `{Name}ApplicationService` / `Impl` | `service/` |
+| InnerController | `{Name}InnerController` | `controller/inner/` |
+| Feign ApiRequest | `{Name}ApiRequest` | `{inner-api-service}/request/` |
+| Feign ApiResponse | `{Name}ApiResponse` | `{inner-api-service}/response/` |
+| RemoteService | `{Name}RemoteService` | `{inner-api-service}/feign/` |
 
 ### 3. Facade 层文件（门面服务）
 
 | 文件类型 | 命名规范 | 路径模式 |
 |----------|----------|----------|
-| AdminController | `XxxAdminController` | `controller/admin/` |
-| AppController | `XxxAppController` | `controller/app/` |
-| ApplicationService | `XxxApplicationService` / `Impl` | `service/` |
-| Request DTO | `XxxRequest` | `dto/request/` |
-| Response DTO | `XxxResponse` / `XxxVO` | `dto/response/` |
+| AdminController | `{Name}AdminController` | `controller/admin/` |
+| AppController | `{Name}AppController` | `controller/app/` |
+| ApplicationService | `{Name}ApplicationService` / `Impl` | `service/` |
+| Request DTO | `{Name}Request` | `dto/request/` |
+| Response DTO | `{Name}Response` / `{Name}VO` | `dto/response/` |
 
 ### 4. 数据库文件
 
@@ -58,7 +58,7 @@
 
 | 文件类型 | 命名规范 | 路径模式 |
 |----------|----------|----------|
-| HTTP Test | `XxxControllerTest.http` | `test/http/` |
+| HTTP Test | `{Name}ControllerTest.http` | `test/http/` |
 
 ## 文件清单生成逻辑
 
@@ -87,32 +87,32 @@ file_inventory:
         generated: false
         
     application:
-      - file_path: "mall-agent-employee-service/controller/inner/JobTypeInnerController.java"
+      - file_path: "{app-service}/controller/inner/{Name}InnerController.java"
         file_type: controller
-        service: mall-agent-employee-service
+        service: {app-service}
         generated: false
         dependencies:
-          - "mall-inner-api/feign/AgentEmployeeRemoteService.java"
+          - "{inner-api-service}/feign/{Name}RemoteService.java"
           
     facade:
-      - file_path: "mall-admin/controller/admin/JobTypeAdminController.java"
+      - file_path: "{facade-service}/controller/admin/{Name}AdminController.java"
         file_type: controller
-        service: mall-admin
+        service: {facade-service}
         generated: false
         dependencies:
-          - "mall-inner-api/feign/AgentEmployeeRemoteService.java"
+          - "{inner-api-service}/feign/{Name}RemoteService.java"
           
   feign_interfaces:
-    - file_path: "mall-inner-api/feign/AgentEmployeeRemoteService.java"
+    - file_path: "{inner-api-service}/feign/{Name}RemoteService.java"
       methods:
-        - createJobType
-        - updateJobType
-        - getJobTypeById
-        - pageJobTypes
+        - create{Name}
+        - update{Name}
+        - get{Name}ById
+        - page{Name}s
       
   database:
-    - file_path: "sql/create_aim_agent_job_type.sql"
-      table: aim_agent_job_type
+    - file_path: "sql/create_{table_name}.sql"
+      table: {table_name}
 ```
 
 ## 约束检查

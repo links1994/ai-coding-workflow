@@ -16,9 +16,9 @@
 ### 1. AdminController / AppController
 
 **命名规范**：
-- 管理后台：`XxxAdminController`
-- C端/App：`XxxAppController`
-- 商家端：`XxxMerchantController`
+- 管理后台：`{Name}AdminController`
+- C端/App：`{Name}AppController`
+- 商家端：`{Name}MerchantController`
 
 **示例**：
 ```java
@@ -26,14 +26,14 @@
 @RequiredArgsConstructor
 @RequestMapping("/admin/api/v1/job-type")
 @Tag(name = "岗位类型管理")
-public class JobTypeAdminController {
+public class {Name}AdminController {
     
-    private final JobTypeApplicationService jobTypeApplicationService;
+    private final {Name}ApplicationService jobTypeApplicationService;
     
     @Operation(summary = "创建岗位类型")
     @PostMapping("/create")
     public CommonResult<Long> create(
-            @RequestBody @Valid JobTypeCreateRequest request,
+            @RequestBody @Valid {Name}CreateRequest request,
             @RequestHeader(AuthConstant.USER_TOKEN_HEADER) String user) {
         Long operatorId = TokenUtil.parseUserId(user);
         return jobTypeApplicationService.create(request, operatorId);
@@ -42,7 +42,7 @@ public class JobTypeAdminController {
     @Operation(summary = "更新岗位类型")
     @PostMapping("/update")
     public CommonResult<Void> update(
-            @RequestBody @Valid JobTypeUpdateRequest request,
+            @RequestBody @Valid {Name}UpdateRequest request,
             @RequestHeader(AuthConstant.USER_TOKEN_HEADER) String user) {
         Long operatorId = TokenUtil.parseUserId(user);
         return jobTypeApplicationService.update(request, operatorId);
@@ -50,14 +50,14 @@ public class JobTypeAdminController {
     
     @Operation(summary = "获取岗位类型详情")
     @GetMapping("/detail")
-    public CommonResult<JobTypeResponse> getById(@RequestParam("id") Long id) {
+    public CommonResult<{Name}Response> getById(@RequestParam("id") Long id) {
         return jobTypeApplicationService.getById(id);
     }
     
     @Operation(summary = "分页查询岗位类型")
     @PostMapping("/page")
-    public CommonResult<CommonResult.PageData<JobTypeResponse>> page(
-            @RequestBody @Valid JobTypePageRequest request) {
+    public CommonResult<CommonResult.PageData<{Name}Response>> page(
+            @RequestBody @Valid {Name}PageRequest request) {
         return jobTypeApplicationService.page(request);
     }
 }
@@ -71,39 +71,39 @@ public class JobTypeAdminController {
 
 ### 2. ApplicationService
 
-**命名规范**：`XxxApplicationService` / `XxxApplicationServiceImpl`
+**命名规范**：`{Name}ApplicationService` / `{Name}ApplicationServiceImpl`
 
 **示例**：
 ```java
 @Service
 @RequiredArgsConstructor
-public class JobTypeApplicationServiceImpl implements JobTypeApplicationService {
+public class {Name}ApplicationServiceImpl implements {Name}ApplicationService {
     
-    private final AgentEmployeeRemoteService agentEmployeeRemoteService;
+    private final {Name}RemoteService agentEmployeeRemoteService;
     
     @Override
-    public CommonResult<Long> create(JobTypeCreateRequest request, Long operatorId) {
+    public CommonResult<Long> create({Name}CreateRequest request, Long operatorId) {
         // String 参数去空格
         String trimmedName = StringUtils.trim(request.getName());
         String trimmedDescription = StringUtils.trim(request.getDescription());
         
         // 构建 ApiRequest
-        JobTypeCreateApiRequest apiRequest = new JobTypeCreateApiRequest();
+        {Name}CreateApiRequest apiRequest = new {Name}CreateApiRequest();
         apiRequest.setOperatorId(operatorId);
         apiRequest.setName(trimmedName);
         apiRequest.setDescription(trimmedDescription);
         apiRequest.setSortOrder(request.getSortOrder());
         
         // 调用 Feign 接口
-        return agentEmployeeRemoteService.createJobType(apiRequest);
+        return agentEmployeeRemoteService.create{Name}(apiRequest);
     }
     
     @Override
-    public CommonResult<JobTypeResponse> getById(Long id) {
+    public CommonResult<{Name}Response> getById(Long id) {
         // String 参数去空格
         Long trimmedId = id; // Long 类型无需去空格
         
-        CommonResult<JobTypeApiResponse> result = agentEmployeeRemoteService.getJobTypeById(trimmedId);
+        CommonResult<{Name}ApiResponse> result = agentEmployeeRemoteService.get{Name}ById(trimmedId);
         
         // 转换为门面层 Response
         if (result.getData() == null) {
@@ -113,8 +113,8 @@ public class JobTypeApplicationServiceImpl implements JobTypeApplicationService 
     }
     
     // 转换方法（防腐层）
-    private JobTypeResponse convertToResponse(JobTypeApiResponse apiResponse) {
-        JobTypeResponse response = new JobTypeResponse();
+    private {Name}Response convertToResponse({Name}ApiResponse apiResponse) {
+        {Name}Response response = new {Name}Response();
         response.setId(apiResponse.getId());
         response.setName(apiResponse.getName());
         response.setDescription(apiResponse.getDescription());
@@ -135,12 +135,12 @@ public class JobTypeApplicationServiceImpl implements JobTypeApplicationService 
 
 ### 3. Request DTO
 
-**命名规范**：`XxxRequest`
+**命名规范**：`{Name}Request`
 
 **示例**：
 ```java
 @Data
-public class JobTypeCreateRequest {
+public class {Name}CreateRequest {
     
     @NotBlank(message = "岗位类型名称不能为空")
     @Size(max = 50, message = "名称长度不能超过50")
@@ -162,12 +162,12 @@ public class JobTypeCreateRequest {
 
 ### 4. Response DTO / VO
 
-**命名规范**：`XxxResponse` / `XxxVO`
+**命名规范**：`{Name}Response` / `{Name}VO`
 
 **示例**：
 ```java
 @Data
-public class JobTypeResponse {
+public class {Name}Response {
     
     private Long id;
     
@@ -215,20 +215,20 @@ public class JobTypeResponse {
 ## 输出文件结构
 
 ```
-mall-admin/
+{facade-service}/
 ├── controller/
 │   └── admin/
-│       └── JobTypeAdminController.java
+│       └── {Name}AdminController.java
 ├── service/
-│   ├── JobTypeApplicationService.java
-│   └── JobTypeApplicationServiceImpl.java
+│   ├── {Name}ApplicationService.java
+│   └── {Name}ApplicationServiceImpl.java
 └── dto/
     ├── request/
-    │   ├── JobTypeCreateRequest.java
-    │   ├── JobTypeUpdateRequest.java
-    │   └── JobTypePageRequest.java
+    │   ├── {Name}CreateRequest.java
+    │   ├── {Name}UpdateRequest.java
+    │   └── {Name}PageRequest.java
     └── response/
-        └── JobTypeResponse.java
+        └── {Name}Response.java
 ```
 
 ## 常见错误避免

@@ -1,12 +1,12 @@
 ---
 trigger: model_decision
-description: Feign接口代码生成规范 - 生成mall-inner-api Feign接口时适用
+description: Feign接口代码生成规范 - 生成{inner-api-service} Feign接口时适用
 globs: [ "**/*.java" ]
 ---
 
 # Feign 接口代码生成规范
 
-> **适用模块**：mall-inner-api 及其子模块
+> **适用模块**：{inner-api-service} 及其子模块
 
 ---
 
@@ -14,9 +14,9 @@ globs: [ "**/*.java" ]
 
 | 元素 | 命名规则 | 示例 |
 |-------------|----------------------|--------------------------------------------|
-| Feign 客户端接口 | `{模块名}RemoteService` | `AgentRemoteService`、`ClientRemoteService` |
-| 远程请求参数 | `Xxx + ApiRequest` | `AgentCreateApiRequest` |
-| 远程响应参数 | `Xxx + ApiResponse` | `AgentApiResponse` |
+| Feign 客户端接口 | `{模块名}RemoteService` | `{Domain}RemoteService`、`ClientRemoteService` |
+| 远程请求参数 | `{Name} + ApiRequest` | `{Domain}CreateApiRequest` |
+| 远程响应参数 | `{Name} + ApiResponse` | `{Domain}ApiResponse` |
 
 ---
 
@@ -28,22 +28,22 @@ globs: [ "**/*.java" ]
 
 **适用场景**：同一目标服务内各接口**业务域相近**，调用方通常一起引入。
 
-- `feign/` 目录下只有一个 `XxxRemoteService.java`
+- `feign/` 目录下只有一个 `{Name}RemoteService.java`
 - 新增接口直接在文件末尾追加方法
 - 可通过注释分区（如 `//====== 业务模块 A ======`）组织不同业务域
 - `@FeignClient` 无需强制声明 `contextId`
 
 ```java
 // ✅ 策略 A 示例
-@FeignClient("mall-agent-employee-service")
-public interface AgentEmployeeRemoteService {
-    // ====== Agent 基础信息 ======
-    @GetMapping("/inner/api/v1/agent/detail")
-    CommonResult<AgentApiResponse> getAgentById(@RequestParam Long agentId);
+@FeignClient("{app-service}")
+public interface {Name}RemoteService {
+    // ====== {Domain} 基础信息 ======
+    @GetMapping("/inner/api/v1/{domain}/detail")
+    CommonResult<{Domain}ApiResponse> get{Domain}ById(@RequestParam Long {domain}Id);
 
-    // ====== Agent 配额 ======
-    @GetMapping("/inner/api/v1/agent/quota/detail")
-    CommonResult<QuotaApiResponse> getQuota(@RequestParam Long agentId);
+    // ====== {Domain} 配额 ======
+    @GetMapping("/inner/api/v1/{domain}/quota/detail")
+    CommonResult<QuotaApiResponse> getQuota(@RequestParam Long {domain}Id);
 }
 ```
 
@@ -85,17 +85,17 @@ public interface IdGenRemoteService {
 
 ```java
 // ✅ 正确：查询类使用 @RequestParam，禁止路径参数
-@GetMapping("/inner/api/v1/agent/detail")
-CommonResult<AgentApiResponse> getAgentById(@RequestParam("agentId") Long agentId);
+@GetMapping("/inner/api/v1/{domain}/detail")
+CommonResult<{Domain}ApiResponse> get{Domain}ById(@RequestParam("{domain}Id") Long {domain}Id);
 
 // ✅ 正确：操作类或多参数使用 @RequestBody
-@PostMapping("/inner/api/v1/agent/list")
-CommonResult<CommonResult.PageData<AgentApiResponse>> pageAgent(
-        @RequestBody AgentListApiRequest request);
+@PostMapping("/inner/api/v1/{domain}/list")
+CommonResult<CommonResult.PageData<{Domain}ApiResponse>> page{Domain}(
+        @RequestBody {Domain}ListApiRequest request);
 
 // ❌ 错误：禁止路径参数
-@GetMapping("/inner/api/v1/agent/{agentId}")
-CommonResult<AgentApiResponse> getAgentById(@PathVariable("agentId") Long agentId);
+@GetMapping("/inner/api/v1/{domain}/{{domain}Id}")
+CommonResult<{Domain}ApiResponse> get{Domain}ById(@PathVariable("{domain}Id") Long {domain}Id);
 ```
 
 ---
@@ -104,7 +104,7 @@ CommonResult<AgentApiResponse> getAgentById(@PathVariable("agentId") Long agentI
 
 当门面服务调用远程服务时，通过命名后缀区分本地对象与远程对象：
 
-| 对象类型 | 门面服务（本地使用） | mall-inner-api（远程定义） |
+| 对象类型 | 门面服务（本地使用） | {inner-api-service}（远程定义） |
 |------|---------------|----------------------|
-| 请求参数 | `XxxRequest` | `XxxApiRequest` |
-| 响应参数 | `XxxResponse` | `XxxApiResponse` |
+| 请求参数 | `{Name}Request` | `{Name}ApiRequest` |
+| 响应参数 | `{Name}Response` | `{Name}ApiResponse` |

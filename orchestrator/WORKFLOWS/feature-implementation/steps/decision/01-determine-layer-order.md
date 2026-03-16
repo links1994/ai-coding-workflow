@@ -33,7 +33,7 @@ facade 层（门面服务）
    - 生成 InnerController、ApplicationService、Query/ManageService
 
 3. **Facade 层最后**
-   - 依赖 mall-inner-api 中的 Feign 接口
+   - 依赖 {inner-api-service} 中的 Feign 接口
    - 生成 AdminController/AppController、ApplicationService、DTO
 
 ### 特殊情况处理
@@ -57,14 +57,14 @@ layer_implementation_order:
     
   - layer: application
     services:
-      - mall-agent-employee-service
+      - {app-service}
     reason: 实现业务逻辑，暴露 Feign 接口
     dependencies:
       - data_layer_complete
       
   - layer: facade
     services:
-      - mall-admin
+      - {facade-service}
     reason: 对外提供 HTTP 接口，编排业务逻辑
     dependencies:
       - feign_interfaces_ready

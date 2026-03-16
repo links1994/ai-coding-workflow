@@ -22,23 +22,23 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 
 | 占位符 | 说明 | 示例 | 替换值 |
 |--------|------|------|--------|
-| `{Name}` | 业务实体名称（大驼峰） | `JobType` | 岗位类型 |
-| `{name}` | 业务实体名称（小驼峰） | `jobType` | jobType |
-| `{NAME}` | 业务实体名称（全大写） | `JOB_TYPE` | JOB_TYPE |
-| `{domain}` | 领域名称（小写） | `agent` | agent |
-| `{Domain}` | 领域名称（大驼峰） | `Agent` | Agent |
-| `{module}` | 模块名称（小写下划线） | `agent_employee` | agent_employee |
-| `{Module}` | 模块名称（大驼峰） | `AgentEmployee` | AgentEmployee |
-| `{path}` | URL 路径（小写中划线） | `job-type` | job-type |
-| `{service}` | 服务名称（小写） | `agent-employee` | agent-employee |
+| `{Name}` | 业务实体名称（大驼峰） | `{Name}` | {业务实体} |
+| `{name}` | 业务实体名称（小驼峰） | `{name}` | {name} |
+| `{NAME}` | 业务实体名称（全大写） | `{NAME}` | {NAME} |
+| `{domain}` | 领域名称（小写） | `{domain}` | {domain} |
+| `{Domain}` | 领域名称（大驼峰） | `{Domain}` | {Domain} |
+| `{module}` | 模块名称（小写下划线） | `{module}` | {module} |
+| `{Module}` | 模块名称（大驼峰） | `{Name}` | {Name} |
+| `{path}` | URL 路径（小写中划线） | `{path}` | {path} |
+| `{service}` | 服务名称（小写） | `{service}` | {service} |
 
 ### 1.2 技术占位符
 
 | 占位符 | 说明 | 示例 |
 |--------|------|------|
-| `{table_name}` | 数据库表名 | `aim_agent_job_type` |
-| `{package}` | 包路径 | `com.aim.mall.admin` |
-| `{base_package}` | 基础包路径 | `com.aim.mall` |
+| `{table_name}` | 数据库表名 | `{table_name}` |
+| `{package}` | 包路径 | `{base_package}.admin` |
+| `{base_package}` | 基础包路径 | `{base_package}` |
 | `{author}` | 作者 | `code-generator` |
 | `{date}` | 生成日期 | `2026-03-16` |
 | `{time}` | 生成时间 | `14:30:00` |
@@ -60,8 +60,8 @@ import {package}.dto.request.{domain}.{Name}ListRequest;
 import {package}.dto.response.{domain}.{Name}Response;
 import {package}.dto.response.{domain}.{Name}DetailVO;
 import {package}.service.{Name}ApplicationService;
-import com.aim.mall.common.core.result.CommonResult;
-import com.aim.mall.common.core.util.UserInfoUtil;
+import {base_package}.common.core.result.CommonResult;
+import {base_package}.common.core.util.UserInfoUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -146,7 +146,7 @@ import {package}.dto.request.{Name}PageApiRequest;
 import {package}.dto.response.{Name}ApiResponse;
 import {package}.service.{Name}QueryService;
 import {package}.service.{Name}ManageService;
-import com.aim.mall.common.core.result.CommonResult;
+import {base_package}.common.core.result.CommonResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -233,7 +233,7 @@ public class {Name}InnerController {
 ```java
 package {package}.domain.entity;
 
-import com.aim.mall.common.core.entity.BaseDO;
+import {base_package}.common.core.entity.BaseDO;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -390,7 +390,7 @@ package {package}.service;
 
 import {package}.domain.entity.Aim{Name}DO;
 import {package}.dto.response.{Name}ApiResponse;
-import com.aim.mall.common.core.result.CommonResult;
+import {base_package}.common.core.result.CommonResult;
 
 import java.util.List;
 
@@ -424,7 +424,7 @@ import {package}.dto.response.{Name}ApiResponse;
 import {package}.mapper.Aim{Name}Mapper;
 import {package}.service.Aim{Name}Service;
 import {package}.service.{Name}QueryService;
-import com.aim.mall.common.core.result.CommonResult;
+import {base_package}.common.core.result.CommonResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -588,7 +588,7 @@ import {package}.dto.request.{Name}UpdateRequest;
 import {package}.dto.request.{Name}ListRequest;
 import {package}.dto.response.{Name}Response;
 import {package}.dto.response.{Name}DetailVO;
-import com.aim.mall.common.core.result.CommonResult;
+import {base_package}.common.core.result.CommonResult;
 
 /**
  * {Name}应用服务接口
@@ -617,7 +617,7 @@ import {package}.dto.response.{Name}Response;
 import {package}.dto.response.{Name}DetailVO;
 import {package}.feign.{Name}RemoteService;
 import {package}.service.{Name}ApplicationService;
-import com.aim.mall.common.core.result.CommonResult;
+import {base_package}.common.core.result.CommonResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -681,7 +681,7 @@ import {package}.dto.request.{Name}CreateApiRequest;
 import {package}.dto.request.{Name}UpdateApiRequest;
 import {package}.dto.request.{Name}PageApiRequest;
 import {package}.dto.response.{Name}ApiResponse;
-import com.aim.mall.common.core.result.CommonResult;
+import {base_package}.common.core.result.CommonResult;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -827,21 +827,21 @@ public class {Name}Response implements Serializable {
 
 ### 3.1 文件生成顺序
 
-1. **Feign 接口**（mall-inner-api）
+1. **Feign 接口**（{inner-api-service}）
    - `{Name}RemoteService.java`
    - `{Name}CreateApiRequest.java`
    - `{Name}UpdateApiRequest.java`
    - `{Name}PageApiRequest.java`
    - `{Name}ApiResponse.java`
 
-2. **应用服务层**（mall-agent-employee-service）
+2. **应用服务层**（{app-service}）
    - `Aim{Name}DO.java`
    - `Aim{Name}Mapper.java` / `.xml`
    - `{Name}QueryService.java` / `Impl.java`
    - `{Name}ManageService.java` / `Impl.java`
    - `{Name}InnerController.java`
 
-3. **门面服务层**（mall-admin / mall-toc-service）
+3. **门面服务层**（{facade-service} / {facade-service-2}）
    - `{Name}CreateRequest.java`
    - `{Name}UpdateRequest.java`
    - `{Name}ListRequest.java`
@@ -852,15 +852,15 @@ public class {Name}Response implements Serializable {
 
 ### 3.2 命名替换规则
 
-| 原始占位符 | 替换示例（JobType） |
+| 原始占位符 | 替换示例（{Name}） |
 |------------|---------------------|
-| `{Name}` | `JobType` |
-| `{name}` | `jobType` |
-| `{NAME}` | `JOB_TYPE` |
-| `{domain}` | `agent` |
-| `{Domain}` | `Agent` |
-| `{path}` | `job-type` |
-| `{table_name}` | `aim_agent_job_type` |
+| `{Name}` | `{Name}` |
+| `{name}` | `{name}` |
+| `{NAME}` | `{NAME}` |
+| `{domain}` | `{domain}` |
+| `{Domain}` | `{Domain}` |
+| `{path}` | `{path}` |
+| `{table_name}` | `{table_name}` |
 
 ---
 

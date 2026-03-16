@@ -1,7 +1,7 @@
 # Step: 生成 Feign 接口
 
 ## 目的
-生成 mall-inner-api 中的 Feign 接口定义，包括 RemoteService 和 ApiRequest/ApiResponse。
+生成 {inner-api-service} 中的 Feign 接口定义，包括 RemoteService 和 ApiRequest/ApiResponse。
 
 ## 输入
 - `feature_definition`: Feature 定义
@@ -18,21 +18,21 @@
 
 **示例**：
 ```java
-@FeignClient("mall-agent-employee-service")
-public interface AgentEmployeeRemoteService {
+@FeignClient("{app-service}")
+public interface {Name}RemoteService {
     
     @PostMapping("/inner/api/v1/job-type/create")
-    CommonResult<Long> createJobType(@RequestBody JobTypeCreateApiRequest request);
+    CommonResult<Long> create{Name}(@RequestBody {Name}CreateApiRequest request);
     
     @PostMapping("/inner/api/v1/job-type/update")
-    CommonResult<Void> updateJobType(@RequestBody JobTypeUpdateApiRequest request);
+    CommonResult<Void> update{Name}(@RequestBody {Name}UpdateApiRequest request);
     
     @GetMapping("/inner/api/v1/job-type/detail")
-    CommonResult<JobTypeApiResponse> getJobTypeById(@RequestParam("id") Long id);
+    CommonResult<{Name}ApiResponse> get{Name}ById(@RequestParam("id") Long id);
     
     @PostMapping("/inner/api/v1/job-type/page")
-    CommonResult<CommonResult.PageData<JobTypeApiResponse>> pageJobTypes(
-            @RequestBody JobTypePageApiRequest request);
+    CommonResult<CommonResult.PageData<{Name}ApiResponse>> page{Name}s(
+            @RequestBody {Name}PageApiRequest request);
 }
 ```
 
@@ -43,12 +43,12 @@ public interface AgentEmployeeRemoteService {
 
 ### 2. ApiRequest
 
-**命名规范**：`Xxx + ApiRequest`
+**命名规范**：`{Name} + ApiRequest`
 
 **示例**：
 ```java
 @Data
-public class JobTypeCreateApiRequest {
+public class {Name}CreateApiRequest {
     
     @NotNull(message = "操作人ID不能为空")
     private Long operatorId;
@@ -70,12 +70,12 @@ public class JobTypeCreateApiRequest {
 
 ### 3. ApiResponse
 
-**命名规范**：`Xxx + ApiResponse`
+**命名规范**：`{Name} + ApiResponse`
 
 **示例**：
 ```java
 @Data
-public class JobTypeApiResponse {
+public class {Name}ApiResponse {
     
     private Long id;
     
@@ -127,15 +127,15 @@ public class JobTypeApiResponse {
 ## 输出文件结构
 
 ```
-mall-inner-api/
+{inner-api-service}/
 ├── feign/
-│   └── AgentEmployeeRemoteService.java
+│   └── {Name}RemoteService.java
 ├── request/
-│   ├── JobTypeCreateApiRequest.java
-│   ├── JobTypeUpdateApiRequest.java
-│   └── JobTypePageApiRequest.java
+│   ├── {Name}CreateApiRequest.java
+│   ├── {Name}UpdateApiRequest.java
+│   └── {Name}PageApiRequest.java
 └── response/
-    └── JobTypeApiResponse.java
+    └── {Name}ApiResponse.java
 ```
 
 ## 可信源声明

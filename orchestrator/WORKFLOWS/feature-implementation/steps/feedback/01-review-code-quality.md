@@ -17,10 +17,10 @@
 | 检查项 | 规范 | 严重程度 |
 |--------|------|----------|
 | Controller 命名 | AdminController/AppController/InnerController | 错误 |
-| Service 命名 | XxxApplicationService/QueryService/ManageService | 错误 |
+| Service 命名 | {Name}ApplicationService/QueryService/ManageService | 错误 |
 | DTO 命名 | Request/Response/ApiRequest/ApiResponse | 错误 |
-| Mapper 命名 | AimXxxMapper | 错误 |
-| Entity 命名 | AimXxxDO | 错误 |
+| Mapper 命名 | Aim{Name}Mapper | 错误 |
+| Entity 命名 | Aim{Name}DO | 错误 |
 
 ### 2. 分层规范检查
 
@@ -32,7 +32,7 @@
 
 **应用服务层**：
 - [ ] 禁止在 Controller 使用 `@Valid`
-- [ ] 必须手动编写 `validateXxx()` 方法
+- [ ] 必须手动编写 `validate{Name}()` 方法
 - [ ] 禁止在 Controller 解析 Header
 - [ ] InnerController 仅支持 GET/POST
 
@@ -41,7 +41,7 @@
 | 层级 | 校验方式 | 检查结果 |
 |------|----------|----------|
 | Facade Controller | 使用 `@Valid` | ✅/❌ |
-| Application Controller | 手动 `validateXxx()` | ✅/❌ |
+| Application Controller | 手动 `validate{Name}()` | ✅/❌ |
 | 请求对象 | 包含必要校验注解 | ✅/❌ |
 
 ### 4. 接口规范检查
@@ -75,7 +75,7 @@ code_quality_report:
     layering:
       status: warning
       details:
-        - file: "mall-admin/service/JobTypeApplicationServiceImpl.java"
+        - file: "{facade-service}/service/{Name}ApplicationServiceImpl.java"
           issue: "String 参数未在入口处统一去空格"
           severity: warning
           suggestion: "在方法入口处添加 StringUtils.trim() 处理"
@@ -89,7 +89,7 @@ code_quality_report:
       details: []
       
   files:
-    - file_path: "mall-admin/controller/admin/JobTypeAdminController.java"
+    - file_path: "{facade-service}/controller/admin/{Name}AdminController.java"
       status: passed
       checks:
         naming: ✅
@@ -97,7 +97,7 @@ code_quality_report:
         validation: ✅
         interface: ✅
         
-    - file_path: "mall-agent-employee-service/controller/inner/JobTypeInnerController.java"
+    - file_path: "{app-service}/controller/inner/{Name}InnerController.java"
       status: warning
       checks:
         naming: ✅
@@ -121,7 +121,7 @@ code_quality_report:
 2. **缺少校验方法**
    ```java
    // 建议添加
-   private void validateXxxRequest(XxxRequest request) {
+   private void validate{Name}Request({Name}Request request) {
        if (request == null) {
            throw new BusinessException(ErrorCode.PARAM_ERROR, "请求参数不能为空");
        }

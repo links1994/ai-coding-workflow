@@ -100,6 +100,6 @@ trigger: always_on
 ## 相关文档
 
 - **Skill**: `.qoder/skills/java-code-generation/SKILL.md`
-- **Agent**: `.qoder/agents/code-generator.md`
+- **{Domain}**: `.qoder/{domain}s/code-generator.md`
 - **流程**: `orchestrator/WORKFLOWS/feature-implementation/workflow.yml`
 - **代码示例**: `orchestrator/WORKFLOWS/feature-implementation/_TEMPLATE/`

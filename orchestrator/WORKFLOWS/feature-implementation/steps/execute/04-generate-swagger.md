@@ -51,13 +51,13 @@ Swagger 文档生成在以下时机执行：
 
 ```
 outputs/swagger/
-├── mall-admin/
-│   └── JobTypeAdmin/
-│       └── 岗位类型管理-JobTypeAdminApi.md
-├── mall-toc-service/
+├── {facade-service}/
+│   └── {Name}Admin/
+│       └── 岗位类型管理-{Name}AdminApi.md
+├── {facade-service-2}/
 │   └── EmployeeApp/
 │       └── 智能员工信息-EmployeeAppApi.md
-└── mall-agent-employee-service/
+└── {app-service}/
     └── ActivationInner/
         └── 激活解锁-ActivationInnerApi.md
 ```
@@ -71,7 +71,7 @@ outputs/swagger/
 
 ## 参考模板
 
-模板文件位置：`outputs/swagger/_TEMPLATE/岗位类型管理-JobTypeAdminApi.md`
+模板文件位置：`outputs/swagger/_TEMPLATE/岗位类型管理-{Name}AdminApi.md`
 
 ## 相关文档
 

@@ -26,17 +26,17 @@ globs: [ "**/*.java", "**/*.xml" ]
 ### 2.1 调用链总览
 
 ```
-XxxApplicationService（编排层）
-    ↓ 只允许调用 XxxQueryService（查询） 或 XxxManageService（增删改）
-    ↓ 禁止直接调用 AimXxxService 或 AimXxxMapper
+{Name}ApplicationService（编排层）
+    ↓ 只允许调用 {Name}QueryService（查询） 或 {Name}ManageService（增删改）
+    ↓ 禁止直接调用 Aim{Name}Service 或 Aim{Name}Mapper
 
-XxxQueryService / XxxManageService（数据访问层，二选一模式）
-    ├── 模式 A：注入 AimXxxService 接口（位于 service/mp/）
+{Name}QueryService / {Name}ManageService（数据访问层，二选一模式）
+    ├── 模式 A：注入 Aim{Name}Service 接口（位于 service/mp/）
     │       增删改 → 调用 MP 方法（save/updateById/removeById）
-    │       查询   → 调用 AimXxxServiceImpl.baseMapper.xxx()（XML 原生 SQL）
-    └── 模式 B：注入 AimXxxMapper（直接原生 SQL，增删改查均可）
+    │       查询   → 调用 Aim{Name}ServiceImpl.baseMapper.xxx()（XML 原生 SQL）
+    └── 模式 B：注入 Aim{Name}Mapper（直接原生 SQL，增删改查均可）
 
-AimXxxServiceImpl（位于 service/impl/mp/，继承 ServiceImpl）
+Aim{Name}ServiceImpl（位于 service/impl/mp/，继承 ServiceImpl）
     增删改 → 使用 MP 方法
     查询   → 使用 this.baseMapper.xxx() 调用原生 SQL（XML 中定义）
 ```
@@ -44,99 +44,99 @@ AimXxxServiceImpl（位于 service/impl/mp/，继承 ServiceImpl）
 ### 2.2 核心约束
 
 **ApplicationService 约束**：
-- `XxxApplicationService` 必须通过 `XxxQueryService` 执行查询操作
-- `XxxApplicationService` 必须通过 `XxxManageService` 执行增删改操作
-- `XxxApplicationService` **禁止**直接注入 `AimXxxService` 或 `AimXxxMapper`
+- `{Name}ApplicationService` 必须通过 `{Name}QueryService` 执行查询操作
+- `{Name}ApplicationService` 必须通过 `{Name}ManageService` 执行增删改操作
+- `{Name}ApplicationService` **禁止**直接注入 `Aim{Name}Service` 或 `Aim{Name}Mapper`
 
 **QueryService / ManageService 数据访问二选一原则**：
 
 | 模式 | 注入对象 | 适用场景 |
 |------|----------|----------|
-| 模式 A | `AimXxxService`（MP Service 接口） | 增删改使用 MP 封装方法，查询使用 XML 原生 SQL |
-| 模式 B | `AimXxxMapper`（原生 Mapper） | 全部操作使用原生 XML SQL，不需要 MP 封装方法 |
+| 模式 A | `Aim{Name}Service`（MP Service 接口） | 增删改使用 MP 封装方法，查询使用 XML 原生 SQL |
+| 模式 B | `Aim{Name}Mapper`（原生 Mapper） | 全部操作使用原生 XML SQL，不需要 MP 封装方法 |
 
-> **互斥规则**：`XxxQueryService` / `XxxManageService` 在同一实现类中**禁止同时注入** `AimXxxService` 和 `AimXxxMapper`，必须二选一。
+> **互斥规则**：`{Name}QueryService` / `{Name}ManageService` 在同一实现类中**禁止同时注入** `Aim{Name}Service` 和 `Aim{Name}Mapper`，必须二选一。
 
-**`AimXxxService`（MP Service）事务约束**：
-- `AimXxxService` / `AimXxxServiceImpl` **严禁标注 `@Transactional`**
-- 事务注解只允许标注在 `XxxManageService` 的实现方法上
-- 理由：`AimXxxServiceImpl` 方法通常被同类或上层代理调用，`@Transactional` 在此层标注易导致 Spring AOP 代理失效（自调用问题）
+**`Aim{Name}Service`（MP Service）事务约束**：
+- `Aim{Name}Service` / `Aim{Name}ServiceImpl` **严禁标注 `@Transactional`**
+- 事务注解只允许标注在 `{Name}ManageService` 的实现方法上
+- 理由：`Aim{Name}ServiceImpl` 方法通常被同类或上层代理调用，`@Transactional` 在此层标注易导致 Spring AOP 代理失效（自调用问题）
 
 **其他禁止事项**：
-- `QueryService` / `ManageService` 中调用 `aimXxxService.getBaseMapper()`
-- `QueryService` / `ManageService` 中直接依赖 `AimXxxServiceImpl`（实现类）
-- `XxxApplicationService` 直接操作数据库（绕过 Query/ManageService）
+- `QueryService` / `ManageService` 中调用 `aim{Name}Service.getBaseMapper()`
+- `QueryService` / `ManageService` 中直接依赖 `Aim{Name}ServiceImpl`（实现类）
+- `{Name}ApplicationService` 直接操作数据库（绕过 Query/ManageService）
 
 ---
 
 ## 3. 代码示例
 
-### 3.1 模式 A：QueryService / ManageService 注入 AimXxxService
+### 3.1 模式 A：QueryService / ManageService 注入 Aim{Name}Service
 
 ```java
-// AimXxxServiceImpl：增删改用 MP，查询用 this.baseMapper 原生 SQL
+// Aim{Name}ServiceImpl：增删改用 MP，查询用 this.baseMapper 原生 SQL
 // 严禁在此类标注 @Transactional
 @Service
-public class AimJobTypeServiceImpl extends ServiceImpl<AimJobTypeMapper, AimJobTypeDO>
-        implements AimJobTypeService {
+public class Aim{Name}ServiceImpl extends ServiceImpl<Aim{Name}Mapper, Aim{Name}DO>
+        implements Aim{Name}Service {
 
-    public AimJobTypeDO getByCode(String code) {
+    public Aim{Name}DO getByCode(String code) {
         return this.baseMapper.selectByCode(code); // 原生 SQL（XML 中定义）
     }
 }
 
-// QueryService：注入 AimXxxService 接口（模式 A），禁止同时注入 AimXxxMapper
+// QueryService：注入 Aim{Name}Service 接口（模式 A），禁止同时注入 Aim{Name}Mapper
 @Service
 @RequiredArgsConstructor
-public class JobTypeQueryServiceImpl implements JobTypeQueryService {
-    private final AimJobTypeService aimJobTypeService; // 注入接口
+public class {Name}QueryServiceImpl implements {Name}QueryService {
+    private final Aim{Name}Service aim{Name}Service; // 注入接口
 
-    public AimJobTypeDO getByCode(String code) {
+    public Aim{Name}DO getByCode(String code) {
         // 查询走原生 SQL（XML）
-        return ((AimJobTypeServiceImpl) aimJobTypeService).getBaseMapper().selectByCode(code);
+        return ((Aim{Name}ServiceImpl) aim{Name}Service).getBaseMapper().selectByCode(code);
     }
 }
 
-// ManageService：注入 AimXxxService 接口（模式 A），事务在此层管理
+// ManageService：注入 Aim{Name}Service 接口（模式 A），事务在此层管理
 @Service
 @RequiredArgsConstructor
-public class JobTypeManageServiceImpl implements JobTypeManageService {
-    private final AimJobTypeService aimJobTypeService; // 注入接口
+public class {Name}ManageServiceImpl implements {Name}ManageService {
+    private final Aim{Name}Service aim{Name}Service; // 注入接口
 
     @Transactional(rollbackFor = Exception.class)
-    public Long create(JobTypeCreateApiRequest request) {
+    public Long create({Name}CreateApiRequest request) {
         // 增删改用 MP 方法
-        AimJobTypeDO entity = convertToDO(request);
-        aimJobTypeService.save(entity);
+        Aim{Name}DO entity = convertToDO(request);
+        aim{Name}Service.save(entity);
         return entity.getId();
     }
 }
 ```
 
-### 3.2 模式 B：QueryService / ManageService 直接注入 AimXxxMapper
+### 3.2 模式 B：QueryService / ManageService 直接注入 Aim{Name}Mapper
 
 ```java
-// QueryService：直接注入 AimXxxMapper（模式 B）
+// QueryService：直接注入 Aim{Name}Mapper（模式 B）
 @Service
 @RequiredArgsConstructor
-public class JobTypeQueryServiceImpl implements JobTypeQueryService {
-    private final AimJobTypeMapper aimJobTypeMapper; // 直接注入 Mapper
+public class {Name}QueryServiceImpl implements {Name}QueryService {
+    private final Aim{Name}Mapper aim{Name}Mapper; // 直接注入 Mapper
 
-    public AimJobTypeDO getByCode(String code) {
-        return aimJobTypeMapper.selectByCode(code); // 原生 SQL
+    public Aim{Name}DO getByCode(String code) {
+        return aim{Name}Mapper.selectByCode(code); // 原生 SQL
     }
 }
 
-// ManageService：直接注入 AimXxxMapper（模式 B）
+// ManageService：直接注入 Aim{Name}Mapper（模式 B）
 @Service
 @RequiredArgsConstructor
-public class JobTypeManageServiceImpl implements JobTypeManageService {
-    private final AimJobTypeMapper aimJobTypeMapper; // 直接注入 Mapper
+public class {Name}ManageServiceImpl implements {Name}ManageService {
+    private final Aim{Name}Mapper aim{Name}Mapper; // 直接注入 Mapper
 
     @Transactional(rollbackFor = Exception.class)
-    public Long create(JobTypeCreateApiRequest request) {
-        AimJobTypeDO entity = convertToDO(request);
-        aimJobTypeMapper.insert(entity); // 原生 SQL
+    public Long create({Name}CreateApiRequest request) {
+        Aim{Name}DO entity = convertToDO(request);
+        aim{Name}Mapper.insert(entity); // 原生 SQL
         return entity.getId();
     }
 }
@@ -148,18 +148,18 @@ public class JobTypeManageServiceImpl implements JobTypeManageService {
 
 ### 4.1 XML 文件位置
 
-- 应用服务：`src/main/resources/mapper/AimXxxMapper.xml`
-- 基础数据服务：`src/main/resources/mapper/AimXxxMapper.xml`
+- 应用服务：`src/main/resources/mapper/Aim{Name}Mapper.xml`
+- 基础数据服务：`src/main/resources/mapper/Aim{Name}Mapper.xml`
 
 ### 4.2 XML 基本结构
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.aim.mall.agent.employee.mapper.AimJobTypeMapper">
+<mapper namespace="{base_package}.{domain}.employee.mapper.Aim{Name}Mapper">
 
     <!-- 结果映射 -->
-    <resultMap id="BaseResultMap" type="com.aim.mall.agent.employee.domain.entity.AimJobTypeDO">
+    <resultMap id="BaseResultMap" type="{base_package}.{domain}.employee.domain.entity.Aim{Name}DO">
         <id column="id" property="id"/>
         <result column="name" property="name"/>
         <result column="description" property="description"/>
@@ -182,7 +182,7 @@ public class JobTypeManageServiceImpl implements JobTypeManageService {
     <select id="selectByCode" resultMap="BaseResultMap">
         SELECT
         <include refid="Base_Column_List"/>
-        FROM aim_agent_job_type
+        FROM {table_name}
         WHERE code = #{code}
           AND is_deleted = 0
     </select>
@@ -191,7 +191,7 @@ public class JobTypeManageServiceImpl implements JobTypeManageService {
     <select id="selectPage" resultMap="BaseResultMap">
         SELECT
         <include refid="Base_Column_List"/>
-        FROM aim_agent_job_type
+        FROM {table_name}
         WHERE is_deleted = 0
         <if test="keyword != null and keyword != ''">
             AND name LIKE CONCAT('%', #{keyword}, '%')
@@ -220,7 +220,7 @@ public class JobTypeManageServiceImpl implements JobTypeManageService {
 **禁止使用**：
 ```sql
 -- 深度分页性能极差
-SELECT * FROM aim_agent_job_type 
+SELECT * FROM {table_name} 
 WHERE is_deleted = 0 
 ORDER BY create_time DESC 
 LIMIT 1000000, 20;
@@ -235,15 +235,15 @@ LIMIT 1000000, 20;
 
 ```java
 // 请求参数包含 lastId
-public List<AimJobTypeDO> selectByCursor(Long lastId, Integer pageSize) {
-    return aimJobTypeMapper.selectByCursor(lastId, pageSize);
+public List<Aim{Name}DO> selectByCursor(Long lastId, Integer pageSize) {
+    return aim{Name}Mapper.selectByCursor(lastId, pageSize);
 }
 
 // XML
 <select id="selectByCursor" resultMap="BaseResultMap">
     SELECT
     <include refid="Base_Column_List"/>
-    FROM aim_agent_job_type
+    FROM {table_name}
     WHERE is_deleted = 0
       <if test="lastId != null">
           AND id < #{lastId}

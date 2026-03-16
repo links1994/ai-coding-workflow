@@ -34,24 +34,23 @@
 ```yaml
 feature_definition:
   id: F-001
-  name: 岗位类型管理
+  name: {功能标题}
   domain: 配置管理域
-  module: mall-agent-employee-service
+  module: {app-service}
   type: functional
   priority: P0
   dependencies: []
-  description: 运营人员管理智能员工岗位类型...
+  description: {功能详细描述}
   acceptance_criteria:
-    - 支持岗位CRUD操作
-    - 返回该岗位下关联员工数
+    - 支持CRUD操作
   services:
-    - name: mall-admin
+    - name: {facade-service}
       layer: facade
       interfaces: 4
-    - name: mall-agent-employee-service
+    - name: {app-service}
       layer: application
   tables:
-    - aim_agent_job_type
+    - {table_name}
 ```
 
 ## 错误处理

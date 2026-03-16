@@ -26,7 +26,7 @@ globs: [ "**/*.java" ]
 // 仅错误码
 throw new BusinessException(ErrorCodeEnum.AGENT_BUSINESS_ERROR);
 // 错误码 + 自定义消息
-throw new BusinessException(ErrorCodeEnum.AGENT_BUSINESS_ERROR, "岗位类型不存在");
+throw new BusinessException(ErrorCodeEnum.AGENT_BUSINESS_ERROR, "{业务实体}不存在");
 // 错误码 + 异常原因
 throw new BusinessException(ErrorCodeEnum.AGENT_BUSINESS_ERROR, cause);
 ```
@@ -55,8 +55,8 @@ throw new BusinessException(ErrorCodeEnum.AGENT_BUSINESS_ERROR, cause);
 
 ```java
 // 正确：ApplicationService 层透传远端业务失败
-public CommonResult<AgentApiResponse> getAgentDetail(Long agentId) {
-    CommonResult<AgentApiResponse> result = agentRemoteService.getById(agentId);
+public CommonResult<{Domain}ApiResponse> get{Domain}Detail(Long {domain}Id) {
+    CommonResult<{Domain}ApiResponse> result = {domain}RemoteService.getById({domain}Id);
     if (!result.isSuccess()) {
         // 远端错误码透传，不抛异常
         return CommonResult.failed(result.getCode(), result.getMessage());
@@ -65,17 +65,17 @@ public CommonResult<AgentApiResponse> getAgentDetail(Long agentId) {
 }
 
 // 错误：将远端业务失败包装为本地 BusinessException（丢失原始错误码）
-public CommonResult<AgentApiResponse> getAgentDetail(Long agentId) {
-    CommonResult<AgentApiResponse> result = agentRemoteService.getById(agentId);
+public CommonResult<{Domain}ApiResponse> get{Domain}Detail(Long {domain}Id) {
+    CommonResult<{Domain}ApiResponse> result = {domain}RemoteService.getById({domain}Id);
     if (!result.isSuccess()) {
-        throw new BusinessException(AgentErrorCodeEnum.SYSTEM_ERROR, result.getMessage()); // 错误
+        throw new BusinessException({Domain}ErrorCodeEnum.SYSTEM_ERROR, result.getMessage()); // 错误
     }
     return result;
 }
 
 // 错误：未校验 CommonResult 直接取 data（可能 NPE 且忽略业务失败）
-public AgentApiResponse getAgentDetail(Long agentId) {
-    return agentRemoteService.getById(agentId).getData(); // 错误
+public {Domain}ApiResponse get{Domain}Detail(Long {domain}Id) {
+    return {domain}RemoteService.getById({domain}Id).getData(); // 错误
 }
 ```
 
@@ -88,7 +88,7 @@ public AgentApiResponse getAgentDetail(Long agentId) {
 ```java
 // GET + 多个 RequestParam（适合简单查询）
 @GetMapping("/list")
-public CommonResult<CommonResult.PageData<AgentResponse>> pageAgent(
+public CommonResult<CommonResult.PageData<{Domain}Response>> page{Domain}(
         @RequestParam(name = "keyword", required = false) String keyword,
         @RequestParam(name = "pageNum", defaultValue = "1") Integer pageNum,
         @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize) {
@@ -97,13 +97,13 @@ public CommonResult<CommonResult.PageData<AgentResponse>> pageAgent(
 
 // GET + PathVariable（仅允许1个，且必须放在 URL 最后）
 @GetMapping("/detail/{id}")
-public CommonResult<AgentResponse> getAgentDetail(@PathVariable Long id) {
+public CommonResult<{Domain}Response> get{Domain}Detail(@PathVariable Long id) {
     // ...
 }
 
 // POST + RequestBody（复杂参数）
 @PostMapping("/create")
-public CommonResult<Long> createAgent(@RequestBody @Valid AgentCreateRequest request) {
+public CommonResult<Long> create{Domain}(@RequestBody @Valid {Domain}CreateRequest request) {
     // ...
 }
 ```
@@ -113,13 +113,13 @@ public CommonResult<Long> createAgent(@RequestBody @Valid AgentCreateRequest req
 ```java
 // GET + RequestParam（≤2个基础类型参数）
 @GetMapping("/detail")
-public CommonResult<AgentApiResponse> getById(@RequestParam Long id) {
+public CommonResult<{Domain}ApiResponse> getById(@RequestParam Long id) {
     // ...
 }
 
 // POST + RequestBody（其他情况一律用 RequestBody）
 @PostMapping("/create")
-public CommonResult<Long> create(@RequestBody AgentCreateApiRequest request) {
+public CommonResult<Long> create(@RequestBody {Domain}CreateApiRequest request) {
     // ...
 }
 
@@ -131,27 +131,27 @@ public CommonResult<Long> create(@RequestBody AgentCreateApiRequest request) {
 | 层级 | 校验方式 | 说明 |
 |------|----------|------|
 | 门面服务 Controller | 使用 `jakarta.validation`（`@Valid`、`@NotNull` 等） | 自动校验，快速失败 |
-| 应用服务 / 基础数据服务 Controller | **禁止使用 `jakarta.validation`**，必须手动校验 | 手动编写 `validateXxx()` 方法 |
+| 应用服务 / 基础数据服务 Controller | **禁止使用 `jakarta.validation`**，必须手动校验 | 手动编写 `validate{Name}()` 方法 |
 
 **应用服务手动校验示例**：
 
 ```java
 @PostMapping("/create")
-public CommonResult<Long> create(@RequestBody JobTypeCreateApiRequest request) {
+public CommonResult<Long> create(@RequestBody {Name}CreateApiRequest request) {
     validateCreateRequest(request);
     Long operatorId = request.getOperatorId();
     // ... 业务逻辑
 }
 
-private void validateCreateRequest(JobTypeCreateApiRequest request) {
+private void validateCreateRequest({Name}CreateApiRequest request) {
     if (request == null) {
-        throw new BusinessException(AgentErrorCodeEnum.PARAM_ERROR, "请求参数不能为空");
+        throw new BusinessException({Domain}ErrorCodeEnum.PARAM_ERROR, "请求参数不能为空");
     }
     if (StringUtils.isBlank(request.getName())) {
-        throw new BusinessException(AgentErrorCodeEnum.PARAM_ERROR, "名称不能为空");
+        throw new BusinessException({Domain}ErrorCodeEnum.PARAM_ERROR, "名称不能为空");
     }
     if (request.getOperatorId() == null) {
-        throw new BusinessException(AgentErrorCodeEnum.PARAM_ERROR, "操作人ID不能为空");
+        throw new BusinessException({Domain}ErrorCodeEnum.PARAM_ERROR, "操作人ID不能为空");
     }
 }
 ```
@@ -173,16 +173,16 @@ private void validateCreateRequest(JobTypeCreateApiRequest request) {
 
 ```java
 // 入口日志
-log.info("[岗位类型创建] operatorId={}, request={}", operatorId, request);
+log.info("[{业务实体}创建] operatorId={}, request={}", operatorId, request);
 
 // 出口日志
-log.info("[岗位类型创建] 成功, result={}", result);
+log.info("[{业务实体}创建] 成功, result={}", result);
 
 // 异常日志
-log.error("[岗位类型创建] 失败, operatorId={}, request={}", operatorId, request, e);
+log.error("[{业务实体}创建] 失败, operatorId={}, request={}", operatorId, request, e);
 
 // 远程调用日志
-log.info("[远程调用] service={}, method={}, param={}", "agent-service", "getById", agentId);
+log.info("[远程调用] service={}, method={}, param={}", "{domain}-service", "getById", {domain}Id);
 ```
 
 ### 3.3 禁止事项
@@ -208,17 +208,17 @@ log.info("[远程调用] service={}, method={}, param={}", "agent-service", "get
 // 门面服务 Controller
 @PostMapping("/create")
 public CommonResult<Long> create(
-        @RequestBody @Valid JobTypeCreateRequest request,
+        @RequestBody @Valid {Name}CreateRequest request,
         @RequestHeader(AuthConstant.USER_TOKEN_HEADER) String userToken) {
     // 解析 userToken 获取 operatorId
     Long operatorId = parseOperatorId(userToken);
     request.setOperatorId(operatorId);
-    return jobTypeApplicationService.create(request);
+    return {name}ApplicationService.create(request);
 }
 
 // 应用服务 Controller
 @PostMapping("/create")
-public CommonResult<Long> create(@RequestBody JobTypeCreateApiRequest request) {
+public CommonResult<Long> create(@RequestBody {Name}CreateApiRequest request) {
     Long operatorId = request.getOperatorId();
     // ... 业务逻辑
 }
@@ -247,7 +247,7 @@ return CommonResult.success(pageData);
 return CommonResult.failed(ErrorCodeEnum.PARAM_ERROR);
 
 // 失败响应（自定义错误码和消息）
-return CommonResult.failed(200101001, "岗位名称不能为空");
+return CommonResult.failed(200101001, "{参数名}不能为空");
 ```
 
 ### 5.2 响应结构
@@ -265,7 +265,7 @@ return CommonResult.failed(200101001, "岗位名称不能为空");
 {
     "success": false,
     "code": 200101001,
-    "message": "岗位名称不能为空",
+    "message": "{参数名}不能为空",
     "data": null
 }
 ```
@@ -273,5 +273,5 @@ return CommonResult.failed(200101001, "岗位名称不能为空");
 ### 5.3 使用约束
 
 - Controller 层必须返回 `CommonResult<T>`
-- 禁止直接返回原始对象（如 `AgentResponse`）
+- 禁止直接返回原始对象（如 `{Domain}Response`）
 - 分页数据使用 `CommonResult.PageData<T>`

@@ -15,9 +15,9 @@ globs: [ "**/*.java", "**/*.sql" ]
 **格式**：`aim_{模块}_{业务名}`（全小写，下划线分隔）
 
 **示例**：
-- `aim_agent_job_type`（岗位类型表）
-- `aim_agent_employee`（智能员工表）
-- `aim_agent_configs`（配置表）
+- `{table_name}`（{业务实体}表）
+- `{table_name_2}`（{业务大类}表）
+- `aim_{domain}_configs`（配置表）
 
 ---
 
@@ -30,8 +30,8 @@ globs: [ "**/*.java", "**/*.sql" ]
 
 | 表名 | DO 类名 |
 |------|---------|
-| `aim_agent_job_type` | `AimAgentJobTypeDO` |
-| `aim_agent_employee` | `AimAgentEmployeeDO` |
+| `{table_name}` | `Aim{Domain}{Name}DO` |
+| `{table_name_2}` | `Aim{Name}DO` |
 
 ---
 
@@ -137,13 +137,13 @@ globs: [ "**/*.java", "**/*.sql" ]
 
 ```sql
 -- 先删除已存在的表（谨慎使用，生产环境请评估）
-DROP TABLE IF EXISTS `aim_agent_job_type`;
+DROP TABLE IF EXISTS `{table_name}`;
 
 -- 创建新表
-CREATE TABLE IF NOT EXISTS `aim_agent_job_type` (
+CREATE TABLE IF NOT EXISTS `{table_name}` (
     `id`          BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
-    `name`        VARCHAR(100) NOT NULL COMMENT '岗位名称',
-    `description` VARCHAR(200) COMMENT '岗位描述',
+    `name`        VARCHAR(100) NOT NULL COMMENT '{参数名}',
+    `description` VARCHAR(200) COMMENT '{业务实体}描述',
     `sort_order`  INT DEFAULT 0 COMMENT '排序值',
     `status`      TINYINT DEFAULT 1 COMMENT '状态：0-禁用 1-启用',
     `is_deleted`  TINYINT DEFAULT 0 COMMENT '逻辑删除：0-未删除 1-已删除',
@@ -155,7 +155,7 @@ CREATE TABLE IF NOT EXISTS `aim_agent_job_type` (
     INDEX idx_status (status),
     INDEX idx_sort_order (sort_order),
     UNIQUE KEY uk_name (name)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='岗位类型表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='{业务实体}表';
 ```
 
 **强制要求**：
@@ -171,8 +171,8 @@ CREATE TABLE IF NOT EXISTS `aim_agent_job_type` (
 
 ```java
 @Data
-@TableName("aim_agent_job_type")
-public class AimAgentJobTypeDO extends BaseDO {
+@TableName("{table_name}")
+public class Aim{Domain}{Name}DO extends BaseDO {
     
     @TableField("name")
     private String name;

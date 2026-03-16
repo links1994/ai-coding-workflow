@@ -99,7 +99,7 @@ description: 分析技术规格书（tech-spec.yml）的完整性和可实现性
 | 参数校验 | @Valid（门面）或手动校验（内部） | 校验方式错误 |
 | DTO 命名 | Request/Response 或 ApiRequest/ApiResponse | 命名不符合分层规范 |
 | Service 分层 | Query/Manage/Application 职责清晰 | 分层混乱 |
-| DO 实体 | AimXxxDO 格式，字段完整 | 命名或字段不符合规范 |
+| DO 实体 | Aim{Name}DO 格式，字段完整 | 命名或字段不符合规范 |
 | 数据库表 | aim_{模块}_{业务名} 格式 | 表名不符合规范 |
 
 ### 7. 可实现性评估
@@ -153,9 +153,9 @@ description: 分析技术规格书（tech-spec.yml）的完整性和可实现性
 
 ## 基本信息
 
-- Feature ID: F-001
-- Feature 名称: 岗位类型管理
-- 分析时间: 2026-03-15
+- Feature ID: {F-XXX}
+- Feature 名称: {功能名称}
+- 分析时间: {YYYY-MM-DD}
 - 分析结果: 通过 / 有条件通过 / 不通过
 
 ## 检查摘要
@@ -175,7 +175,7 @@ description: 分析技术规格书（tech-spec.yml）的完整性和可实现性
 ### 问题 1: 状态流转未定义
 
 **位置**: business_rules.state_machine
-**描述**: 岗位类型状态（ACTIVE/INACTIVE）的流转规则未定义
+**描述**: {业务实体}状态（ACTIVE/INACTIVE）的流转规则未定义
 **影响**: 无法确定状态变更的业务逻辑
 **建议**: 补充状态流转图或状态流转表
 

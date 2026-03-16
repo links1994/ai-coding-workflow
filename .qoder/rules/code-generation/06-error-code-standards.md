@@ -27,11 +27,11 @@ globs: [ "**/*.java" ]
 
 | 代码 | 系统/服务 |
 |------|-----------|
-| 10 | mall-admin |
-| 11 | mall-toc-service |
-| 12 | mall-tob-service |
-| 13 | mall-ai |
-| 20 | mall-agent-employee-service |
+| 10 | {facade-service} |
+| 11 | {facade-service-2} |
+| 12 | {facade-service-3} |
+| 13 | {facade-service-4} |
+| 20 | {app-service} |
 | 21 | mall-product |
 | 22 | mall-merchant |
 | 23 | mall-client |
@@ -44,11 +44,11 @@ globs: [ "**/*.java" ]
 
 由各个服务自行定义，从 01 开始递增。
 
-**示例**（mall-agent-employee-service）：
+**示例**（{app-service}）：
 | 代码 | 模块 |
 |------|------|
-| 01 | 岗位类型管理 |
-| 02 | 智能员工管理 |
+| 01 | {功能描述} |
+| 02 | {模块2} |
 | 03 | 名额配置管理 |
 | 04 | 话术管理 |
 | 05 | 知识库管理 |
@@ -71,17 +71,17 @@ globs: [ "**/*.java" ]
 ## 5. 错误码示例
 
 ```java
-public enum AgentErrorCodeEnum implements ErrorCode {
+public enum {Domain}ErrorCodeEnum implements ErrorCode {
     
     // 参数错误（类型 1）
     PARAM_ERROR(200101001, "参数错误"),
-    PARAM_NAME_EMPTY(200101002, "岗位名称不能为空"),
-    PARAM_NAME_TOO_LONG(200101003, "岗位名称长度不能超过50"),
+    PARAM_NAME_EMPTY(200101002, "{参数名}不能为空"),
+    PARAM_NAME_TOO_LONG(200101003, "{参数名}长度不能超过50"),
     
     // 业务错误（类型 2）
-    JOB_TYPE_NOT_FOUND(200102001, "岗位类型不存在"),
-    JOB_TYPE_NAME_DUPLICATE(200102002, "岗位类型名称已存在"),
-    JOB_TYPE_IN_USE(200102003, "岗位类型正在使用中，无法删除"),
+    {NAME}_NOT_FOUND(200102001, "{业务实体}不存在"),
+    {NAME}_NAME_DUPLICATE(200102002, "{业务实体}名称已存在"),
+    {NAME}_IN_USE(200102003, "{业务实体}正在使用中，无法删除"),
     
     // 系统错误（类型 3）
     SYSTEM_ERROR(200103001, "系统繁忙，请稍后重试"),
@@ -99,7 +99,7 @@ public enum AgentErrorCodeEnum implements ErrorCode {
     private final int code;
     private final String message;
     
-    AgentErrorCodeEnum(int code, String message) {
+    {Domain}ErrorCodeEnum(int code, String message) {
         this.code = code;
         this.message = message;
     }
@@ -127,23 +127,23 @@ public enum AgentErrorCodeEnum implements ErrorCode {
 throw new MethodArgumentValidationException("参数校验失败");
 
 // 业务异常
-throw new BusinessException(AgentErrorCodeEnum.JOB_TYPE_NOT_FOUND);
+throw new BusinessException({Domain}ErrorCodeEnum.{NAME}_NOT_FOUND);
 
 // 带动态参数的业务异常
-throw new BusinessException(AgentErrorCodeEnum.PARAM_NAME_TOO_LONG, "当前长度：" + name.length());
+throw new BusinessException({Domain}ErrorCodeEnum.PARAM_NAME_TOO_LONG, "当前长度：" + name.length());
 ```
 
 ### 6.2 Service 层
 
 ```java
 // 业务规则校验失败
-if (jobType == null) {
-    throw new BusinessException(AgentErrorCodeEnum.JOB_TYPE_NOT_FOUND);
+if ({name} == null) {
+    throw new BusinessException({Domain}ErrorCodeEnum.{NAME}_NOT_FOUND);
 }
 
 // 远程调用失败
 if (!remoteResult.isSuccess()) {
-    throw new BusinessException(AgentErrorCodeEnum.REMOTE_CALL_ERROR);
+    throw new BusinessException({Domain}ErrorCodeEnum.REMOTE_CALL_ERROR);
 }
 ```
 
@@ -170,6 +170,6 @@ if (!remoteResult.isSuccess()) {
 | 范围 | 用途 |
 |------|------|
 | 001-099 | 通用错误（参数、系统、权限等） |
-| 100-199 | 模块特定错误（如岗位类型管理） |
-| 200-299 | 模块特定错误（如智能员工管理） |
+| 100-199 | 模块特定错误（如{功能描述}） |
+| 200-299 | 模块特定错误（如{模块2}） |
 | ... | ... |

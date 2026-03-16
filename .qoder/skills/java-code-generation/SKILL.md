@@ -96,35 +96,35 @@ tasks:
   - id: t1
     name: 生成 Feign 接口
     files:
-      - mall-inner-api/feign/XxxRemoteService.java
-      - mall-inner-api/request/XxxApiRequest.java
-      - mall-inner-api/response/XxxApiResponse.java
+      - {inner-api-service}/feign/{Name}RemoteService.java
+      - {inner-api-service}/request/{Name}ApiRequest.java
+      - {inner-api-service}/response/{Name}ApiResponse.java
     status: pending
     
   - id: t2
     name: 生成应用服务层
     files:
-      - mall-agent-employee-service/domain/entity/AimXxxDO.java
-      - mall-agent-employee-service/mapper/XxxMapper.java
-      - mall-agent-employee-service/service/XxxQueryService.java
-      - mall-agent-employee-service/service/XxxManageService.java
-      - mall-agent-employee-service/service/XxxApplicationService.java
-      - mall-agent-employee-service/controller/inner/XxxInnerController.java
+      - {app-service}/domain/entity/Aim{Name}DO.java
+      - {app-service}/mapper/Aim{Name}Mapper.java
+      - {app-service}/service/{Name}QueryService.java
+      - {app-service}/service/{Name}ManageService.java
+      - {app-service}/service/{Name}ApplicationService.java
+      - {app-service}/controller/inner/{Name}InnerController.java
     status: pending
     
   - id: t3
     name: 生成门面服务层
     files:
-      - mall-admin/dto/request/XxxRequest.java
-      - mall-admin/dto/response/XxxResponse.java
-      - mall-admin/service/XxxApplicationService.java
-      - mall-admin/controller/admin/XxxAdminController.java
+      - {facade-service}/dto/request/{Name}Request.java
+      - {facade-service}/dto/response/{Name}Response.java
+      - {facade-service}/service/{Name}ApplicationService.java
+      - {facade-service}/controller/admin/{Name}AdminController.java
     status: pending
     
   - id: t4
     name: 生成数据库脚本
     files:
-      - outputs/data/sql/{table_name}.sql    # 按表名命名，如 aim_agent_job_type.sql
+      - outputs/data/sql/{table_name}.sql    # 按表名命名，如 {table_name}.sql
     naming_rule: 以数据库表名命名，包含建表语句和测试数据
     versioning: append                      # 追加模式，同一表追加测试数据
     status: pending
@@ -132,7 +132,7 @@ tasks:
   - id: t5
     name: 生成 HTTP 测试文件
     files:
-      - outputs/data/http/{module}-api.http  # 按功能模块命名，如 job-type-api.http
+      - outputs/data/http/{module}-api.http  # 按功能模块命名，如 {path}-api.http
     naming_rule: 按功能模块命名，后续迭代直接修改旧文件
     versioning: append                      # 追加模式，同一模块追加接口
     status: pending
@@ -142,7 +142,7 @@ tasks:
 
 按照 tech-spec.implementation.layer_order 顺序执行：
 
-**3.1 生成 Feign 接口（mall-inner-api）**
+**3.1 生成 Feign 接口（{inner-api-service}）**
 - RemoteService 接口
 - ApiRequest / ApiResponse DTO
 
@@ -160,7 +160,7 @@ tasks:
 
 **3.4 生成数据库脚本**
 - 输出路径：`outputs/data/sql/{table_name}.sql`
-- 命名规则：以数据库表名命名（如 `aim_agent_job_type.sql`）
+- 命名规则：以数据库表名命名（如 `{table_name}.sql`）
 - 内容格式：包含建表语句和测试数据
 - SQL 格式要求：
   - 必须包含 `DROP TABLE IF EXISTS \`table_name\`;`
@@ -172,7 +172,7 @@ tasks:
 
 **3.5 生成 HTTP 测试文件**
 - 输出路径：`outputs/data/http/{module}-api.http`
-- 命名规则：按功能模块命名（如 `job-type-api.http`）
+- 命名规则：按功能模块命名（如 `{path}-api.http`）
 - 内容格式：包含 Admin、App、Inner 三个分组的接口测试
 - 迭代规则：同一功能模块新增接口时，追加到现有文件
 
@@ -186,21 +186,21 @@ tasks:
 每个文件生成后进行 DoD（Definition of Done）验证：
 
 **门面 Controller DoD**：
-- [ ] 命名符合 XxxAdminController / XxxAppController
+- [ ] 命名符合 {Name}AdminController / {Name}AppController
 - [ ] 使用 @Valid 进行参数校验
 - [ ] 从 Header 解析 operatorId
 - [ ] 只调用 ApplicationService，禁止直接调用 RemoteService
 - [ ] 返回门面层自定义的 Response DTO
 
 **内部 Controller DoD**：
-- [ ] 命名符合 XxxInnerController
-- [ ] 手动编写 validateXxx() 方法，禁止 @Valid
+- [ ] 命名符合 {Name}InnerController
+- [ ] 手动编写 validate{Name}() 方法，禁止 @Valid
 - [ ] 使用 @RequestParam，禁止 @PathVariable
 - [ ] 只调用 QueryService / ManageService
 - [ ] 返回 CommonResult 包装
 
 **ApplicationService DoD**：
-- [ ] 命名符合 XxxApplicationService
+- [ ] 命名符合 {Name}ApplicationService
 - [ ] String 参数在入口处统一去空格
 - [ ] 门面层：将 Request 转换为 ApiRequest，ApiResponse 转换为 Response
 - [ ] 应用层：业务编排，DTO 转换
@@ -216,19 +216,19 @@ tasks:
 - [ ] 业务规则校验
 
 **DO 实体 DoD**：
-- [ ] 命名符合 AimXxxDO
+- [ ] 命名符合 Aim{Name}DO
 - [ ] 继承 BaseDO
 - [ ] 字段与数据库表对应
 - [ ] 时间字段使用 LocalDateTime
 
 **Mapper DoD**：
-- [ ] 命名符合 XxxMapper
-- [ ] 继承 BaseMapper<AimXxxDO>
+- [ ] 命名符合 {Name}Mapper
+- [ ] 继承 BaseMapper<Aim{Name}DO>
 - [ ] XML 包含 Base_Column_List
 - [ ] 禁止 SELECT *
 
 **Feign 接口 DoD**：
-- [ ] 命名符合 XxxRemoteService
+- [ ] 命名符合 {Name}RemoteService
 - [ ] @FeignClient 配置正确
 - [ ] 使用 @RequestParam，禁止 @PathVariable
 - [ ] 返回 CommonResult
@@ -240,18 +240,18 @@ tasks:
 生成 generation-manifest.yml：
 
 ```yaml
-program: P-2026-XXX
+program: {P-YYYY-NNN}
 phase: execute
-generated_at: 2026-03-15T10:30:00
+generated_at: {YYYY-MM-DDTHH:mm:ss}
 files:
-  - path: mall-inner-api/feign/XxxRemoteService.java
+  - path: {inner-api-service}/feign/{Name}RemoteService.java
     type: feign
-    service: mall-inner-api
+    service: {inner-api-service}
     status: created
     
-  - path: mall-agent-employee-service/domain/entity/AimXxxDO.java
+  - path: {app-service}/domain/entity/Aim{Name}DO.java
     type: entity
-    service: mall-agent-employee-service
+    service: {app-service}
     status: created
     
   # ... 其他文件

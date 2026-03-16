@@ -1,22 +1,22 @@
-# Controller 代码示例（门面服务 - AdminController）
+# Controller 代码示例（门面服�?- AdminController�?
 
-> **规范参考**：[门面服务规范](../../../../.qoder/rules/code-generation/01-facade-service.md)
-> **DoD检查**：[DoD检查卡](../../../../.qoder/rules/code-generation/10-dod-cards.md#1-门面-controller-dod-检查)
+> **规范参�?*：[门面服务规范](../../../../.qoder/rules/code-generation/01-facade-service.md)
+> **DoD检�?*：[DoD检查卡](../../../../.qoder/rules/code-generation/10-dod-cards.md#1-门面-controller-dod-检�?
 > **模板规范**：[代码模板规范](../../../../.qoder/rules/code-generation/13-code-templates.md#21-门面-controller-模板)
 
 ## 代码结构示例
 
 ```java
-package com.aim.mall.admin.controller.{domain};
+package {base_package}.admin.controller.{domain};
 
-import com.aim.mall.admin.dto.request.{domain}.{Name}CreateRequest;
-import com.aim.mall.admin.dto.request.{domain}.{Name}UpdateRequest;
-import com.aim.mall.admin.dto.request.{domain}.{Name}ListRequest;
-import com.aim.mall.admin.dto.response.{domain}.{Name}Response;
-import com.aim.mall.admin.dto.response.{domain}.{Name}DetailVO;
-import com.aim.mall.admin.service.{Name}ApplicationService;
-import com.aim.mall.common.core.result.CommonResult;
-import com.aim.mall.common.core.util.UserInfoUtil;
+import {base_package}.admin.dto.request.{domain}.{Name}CreateRequest;
+import {base_package}.admin.dto.request.{domain}.{Name}UpdateRequest;
+import {base_package}.admin.dto.request.{domain}.{Name}ListRequest;
+import {base_package}.admin.dto.response.{domain}.{Name}Response;
+import {base_package}.admin.dto.response.{domain}.{Name}DetailVO;
+import {base_package}.admin.service.{Name}ApplicationService;
+import {base_package}.common.core.result.CommonResult;
+import {base_package}.common.core.util.UserInfoUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -84,9 +84,9 @@ public class {Name}AdminController {
 
 ## 命名规则
 
-| 元素 | 命名规范 | 示例 |
+| 元素 | 命名规范 | 说明 |
 |------|---------|------|
-| 类名 | `{Name}AdminController` | `JobTypeAdminController` |
-| 包路径 | `controller/{domain}/` | `controller/agent/` |
-| 路径前缀 | `/admin/api/v1/{path}` | `/admin/api/v1/job-type` |
-| Tag | `@Tag(name = "一级/二级")` | `@Tag(name = "智能员工/岗位类型")` |
+| 类名 | `{Name}AdminController` | 业务实体�?+ `AdminController` |
+| 包路�?| `controller/{domain}/` | 统一放在 controller/{domain} 包下 |
+| 路径前缀 | `/admin/api/v1/{path}` | 管理端统一前缀 + 业务路径 |
+| Tag | `@Tag(name = "一�?二级")` | 使用 `/` 分隔的一级和二级菜单名称 |

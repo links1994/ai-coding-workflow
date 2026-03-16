@@ -12,7 +12,7 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 
 ## 1. 门面 Controller DoD 检查
 
-> 适用服务：mall-admin / mall-tob-service / mall-toc-service / mall-ai
+> 适用服务：{facade-service} / {facade-service-3} / {facade-service-2} / {facade-service-4}
 
 ### 1.1 强制规则（违反 = 严重问题）
 
@@ -25,15 +25,15 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 - [ ] 包含 `@Tag(name = "一级标题/二级标题")` 注解，且使用 `/` 分隔符（二级分组格式）
 - [ ] 每个写操作方法包含 `@RequestHeader(AuthConstant.USER_TOKEN_HEADER) String user` 参数
 - [ ] 从 Header 解析操作人 ID：`UserInfoUtil.getUserInfo(user).getId()`
-- [ ] 将 `operatorId` 写入 `XxxApiRequest`，通过 Feign 传递给应用服务
+- [ ] 将 `operatorId` 写入 `{Name}ApiRequest`，通过 Feign 传递给应用服务
 
 **参数与响应**：
-- [ ] 请求入参使用 `XxxRequest`（以 `Request` 结尾）
-- [ ] 响应出参使用 `XxxResponse` 或 `XxxVO`（门面层自定义，**禁止**直接暴露 `XxxApiResponse` 给前端）
+- [ ] 请求入参使用 `{Name}Request`（以 `Request` 结尾）
+- [ ] 响应出参使用 `{Name}Response` 或 `{Name}VO`（门面层自定义，**禁止**直接暴露 `{Name}ApiResponse` 给前端）
 - [ ] POST/PUT/DELETE 方法使用 `@RequestBody`；GET 多参数使用 `@RequestParam`
 - [ ] 写操作（POST/PUT/DELETE）使用 `@Valid` + `jakarta.validation` 注解校验
-- [ ] `XxxResponse` / `XxxVO` 中的 `LocalDateTime` 字段必须标注 `@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")`
-- [ ] `XxxRequest` 实现 `Serializable`，`serialVersionUID = -1L`
+- [ ] `{Name}Response` / `{Name}VO` 中的 `LocalDateTime` 字段必须标注 `@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")`
+- [ ] `{Name}Request` 实现 `Serializable`，`serialVersionUID = -1L`
 
 **路径规范**：
 - [ ] 路径前缀符合服务规范：`/admin/api/v1/`（管理端）、`/merchant/api/v1/`（商家端）、`/app/api/v1/`（APP端）
@@ -44,17 +44,17 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 
 | 元素 | 命名规范 | 示例 |
 |------|---------|------|
-| 类名（管理端） | `{Name}AdminController` | `JobTypeAdminController` |
+| 类名（管理端） | `{Name}AdminController` | `{Name}AdminController` |
 | 类名（APP端） | `{Name}AppController` | `OrderAppController` |
 | 类名（商家端） | `{Name}MerchantController` | `ProductMerchantController` |
-| 包路径 | `controller/{domain}/` | `controller/agent/` |
-| 接口注解 | `@Tag(name = "业务大类/功能模块")` | `@Tag(name = "智能员工/岗位类型")` |
+| 包路径 | `controller/{domain}/` | `controller/{domain}/` |
+| 接口注解 | `@Tag(name = "业务大类/功能模块")` | `@Tag(name = "{业务大类}/{业务实体}")` |
 
 ### 1.3 警告规则（违反 = 警告问题）
 
 - [ ] `@Operation(summary = "...")` 说明清晰，描述实际业务含义
 - [ ] String 参数由 `ApplicationService` 层统一去空格（Controller 层不做 trim）
-- [ ] 分页响应 `data` 使用 `CommonResult.PageData<XxxResponse>`（`totalCount` + `items` 字段名）
+- [ ] 分页响应 `data` 使用 `CommonResult.PageData<{Name}Response>`（`totalCount` + `items` 字段名）
 - [ ] `serialVersionUID` 统一设置为 `-1L`
 
 ---
@@ -69,38 +69,38 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 - [ ] Controller 只注入并调用 `ApplicationService`，**禁止**注入 `QueryService`、`ManageService`、`Mapper` 等
 - [ ] 不存在任何 `try-catch` 块
 - [ ] 不存在业务逻辑代码，只做参数接收和响应包装
-- [ ] **禁止**解析 `@RequestHeader`，操作人 ID 通过 `XxxApiRequest.operatorId` 接收
+- [ ] **禁止**解析 `@RequestHeader`，操作人 ID 通过 `{Name}ApiRequest.operatorId` 接收
 
 **参数与响应**：
-- [ ] 请求入参使用 `XxxApiRequest`（以 `ApiRequest` 结尾），**禁止**使用 `XxxRequest`
-- [ ] 响应出参使用 `XxxApiResponse`（以 `ApiResponse` 结尾）
+- [ ] 请求入参使用 `{Name}ApiRequest`（以 `ApiRequest` 结尾），**禁止**使用 `{Name}Request`
+- [ ] 响应出参使用 `{Name}ApiResponse`（以 `ApiResponse` 结尾）
 - [ ] 参数 ≤ 2 个且为基础类型：使用 `@RequestParam`；其他情况：**一律使用 `@RequestBody`**
-- [ ] **禁止**使用 `@Valid` / `jakarta.validation`，改用手动 `validateXxx()` 方法
+- [ ] **禁止**使用 `@Valid` / `jakarta.validation`，改用手动 `validate{Name}()` 方法
 - [ ] **禁止**使用 `@PathVariable` 路径参数
 - [ ] HTTP 方法仅使用 GET / POST，**禁止** PUT / DELETE
-- [ ] 所有写操作的 `XxxApiRequest` 包含 `operatorId` 字段（Long 类型）
-- [ ] `XxxApiResponse` 实现 `Serializable`，`serialVersionUID = -1L`
-- [ ] `XxxApiResponse` 中的 `LocalDateTime` 字段标注 `@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")`
+- [ ] 所有写操作的 `{Name}ApiRequest` 包含 `operatorId` 字段（Long 类型）
+- [ ] `{Name}ApiResponse` 实现 `Serializable`，`serialVersionUID = -1L`
+- [ ] `{Name}ApiResponse` 中的 `LocalDateTime` 字段标注 `@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")`
 
 **路径与校验**：
 - [ ] 路径前缀为 `/inner/api/v1/`
-- [ ] 每个 Controller 方法包含手动参数校验方法 `validateXxx(request)`
-- [ ] `validateXxx()` 中校验必填字段不为 null/blank，`operatorId` 不为 null
+- [ ] 每个 Controller 方法包含手动参数校验方法 `validate{Name}(request)`
+- [ ] `validate{Name}()` 中校验必填字段不为 null/blank，`operatorId` 不为 null
 
 ### 2.2 命名规则
 
 | 元素 | 命名规范 | 示例 |
 |------|---------|------|
-| 类名 | `{Name}InnerController` | `JobTypeInnerController` |
+| 类名 | `{Name}InnerController` | `{Name}InnerController` |
 | 包路径 | `controller/inner/`（不建子域目录）| `controller/inner/` |
-| 路径前缀 | `/inner/api/v1/` | `/inner/api/v1/job-type` |
-| 接口注解 | `@Tag(name = "...")` 单一描述，无需二级分组 | `@Tag(name = "岗位类型-内部接口")` |
+| 路径前缀 | `/inner/api/v1/` | `/inner/api/v1/{path}` |
+| 接口注解 | `@Tag(name = "...")` 单一描述，无需二级分组 | `@Tag(name = "{业务实体}-内部接口")` |
 
 ### 2.3 警告规则（违反 = 警告问题）
 
 - [ ] `@Operation(summary = "...")` 说明清晰
-- [ ] Feign 接口（`XxxRemoteService`）与 Controller 方法签名保持一致
-- [ ] 分页响应使用 `CommonResult.PageData<XxxApiResponse>`（`totalCount` + `items` 字段名）
+- [ ] Feign 接口（`{Name}RemoteService`）与 Controller 方法签名保持一致
+- [ ] 分页响应使用 `CommonResult.PageData<{Name}ApiResponse>`（`totalCount` + `items` 字段名）
 
 ---
 
@@ -117,11 +117,11 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 - [ ] 所有查询 SQL 必须包含删除过滤条件（根据表的删除策略）：`WHERE is_deleted = 0`（`is_deleted` 方案）或 `WHERE deleted_at IS NULL`（`deleted_at` 方案）；物理删除表和配置表无需此条件
 
 **依赖注入二选一原则**：
-- [ ] 同一实现类中**禁止同时注入** `AimXxxService` 和 `AimXxxMapper`，必须二选一：
-  - 模式 A：注入 `AimXxxService`（MP Service 接口），增删改用 MP 方法，查询走 `baseMapper`
-  - 模式 B：直接注入 `AimXxxMapper`，全部操作使用原生 XML SQL
-- [ ] 注入 `AimXxxService` 接口，**禁止**注入 `AimXxxServiceImpl`（实现类）
-- [ ] **禁止**调用 `aimXxxService.getBaseMapper()`
+- [ ] 同一实现类中**禁止同时注入** `Aim{Name}Service` 和 `Aim{Name}Mapper`，必须二选一：
+  - 模式 A：注入 `Aim{Name}Service`（MP Service 接口），增删改用 MP 方法，查询走 `baseMapper`
+  - 模式 B：直接注入 `Aim{Name}Mapper`，全部操作使用原生 XML SQL
+- [ ] 注入 `Aim{Name}Service` 接口，**禁止**注入 `Aim{Name}ServiceImpl`（实现类）
+- [ ] **禁止**调用 `aim{Name}Service.getBaseMapper()`
 
 **调用链约束**：
 - [ ] `QueryService` 不被 `ApplicationService` 以外的组件调用
@@ -129,23 +129,23 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 - [ ] 不标注 `@Transactional`（查询层无需事务）
 
 **入参规范**：
-- [ ] 方法入参使用 `XxxQuery` / `XxxPageQuery` / `XxxListQuery`（不接受 `XxxRequest` / `XxxApiRequest`）
+- [ ] 方法入参使用 `{Name}Query` / `{Name}PageQuery` / `{Name}ListQuery`（不接受 `{Name}Request` / `{Name}ApiRequest`）
 
 ### 3.2 命名规则
 
 | 元素 | 命名规范 | 示例 |
 |------|---------|------|
-| 接口 | `{Name}QueryService` | `JobTypeQueryService` |
-| 实现 | `{Name}QueryServiceImpl` | `JobTypeQueryServiceImpl` |
-| 包路径 | `service/`（直接平铺，不建子目录）| `service/JobTypeQueryService.java` |
-| 入参类型 | `XxxQuery` / `XxxPageQuery` | `JobTypePageQuery` |
+| 接口 | `{Name}QueryService` | `{Name}QueryService` |
+| 实现 | `{Name}QueryServiceImpl` | `{Name}QueryServiceImpl` |
+| 包路径 | `service/`（直接平铺，不建子目录）| `service/{Name}QueryService.java` |
+| 入参类型 | `{Name}Query` / `{Name}PageQuery` | `{Name}PageQuery` |
 
 ### 3.3 警告规则（违反 = 警告问题）
 
-- [ ] 大表分页查询（预估 ≥ 100 万行）使用索引覆盖两阶段查询（先查 ID，再回表），并封装在 `AimXxxServiceImpl` 内部
+- [ ] 大表分页查询（预估 ≥ 100 万行）使用索引覆盖两阶段查询（先查 ID，再回表），并封装在 `Aim{Name}ServiceImpl` 内部
 - [ ] XML Mapper 中使用 `<sql id="Base_Column_List">` 定义可复用字段片段
 - [ ] 禁止在 `@Select`、`@Insert` 等注解中编写复杂 SQL（仅限极简单单表操作）
-- [ ] 查询方法命名语义清晰：`getByXxx`（单条）、`listByXxx`（列表）、`pageByXxx`（分页）
+- [ ] 查询方法命名语义清晰：`getBy{Name}`（单条）、`listBy{Name}`（列表）、`pageBy{Name}`（分页）
 
 ---
 
@@ -161,27 +161,27 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 
 **事务约束**：
 - [ ] 写操作方法必须标注 `@Transactional(rollbackFor = Exception.class)`
-- [ ] `AimXxxService` / `AimXxxServiceImpl` **严禁标注 `@Transactional`**
+- [ ] `Aim{Name}Service` / `Aim{Name}ServiceImpl` **严禁标注 `@Transactional`**
 
 **依赖注入二选一原则**：
-- [ ] 同一实现类中**禁止同时注入** `AimXxxService` 和 `AimXxxMapper`，必须二选一
-- [ ] 注入 `AimXxxService` 接口，**禁止**注入 `AimXxxServiceImpl`（实现类）
+- [ ] 同一实现类中**禁止同时注入** `Aim{Name}Service` 和 `Aim{Name}Mapper`，必须二选一
+- [ ] 注入 `Aim{Name}Service` 接口，**禁止**注入 `Aim{Name}ServiceImpl`（实现类）
 
 **调用链约束**：
 - [ ] `ManageService` 不被 `ApplicationService` 以外的组件调用
 - [ ] **禁止**在 `ManageService` 中发起 Feign 远程调用
 
 **入参规范**：
-- [ ] 方法入参使用 `XxxApiRequest`（写操作必须包含 `operatorId`）
+- [ ] 方法入参使用 `{Name}ApiRequest`（写操作必须包含 `operatorId`）
 - [ ] 返回值为实体 ID（Long）或 void
 
 ### 4.2 命名规则
 
 | 元素 | 命名规范 | 示例 |
 |------|---------|------|
-| 接口 | `{Name}ManageService` | `JobTypeManageService` |
-| 实现 | `{Name}ManageServiceImpl` | `JobTypeManageServiceImpl` |
-| 包路径 | `service/`（直接平铺，不建子目录）| `service/JobTypeManageService.java` |
+| 接口 | `{Name}ManageService` | `{Name}ManageService` |
+| 实现 | `{Name}ManageServiceImpl` | `{Name}ManageServiceImpl` |
+| 包路径 | `service/`（直接平铺，不建子目录）| `service/{Name}ManageService.java` |
 
 ---
 
@@ -194,11 +194,11 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 **命名约束**：
 - [ ] 类名严格遵循 `Aim{Name}DO` 格式：必须以 `Aim` 开头，以 `DO` 结尾
 - [ ] 类名与表名对应：表名 `aim_{模块}_{业务名}` → 类名 `Aim{模块首字母大驼峰}{业务名首字母大驼峰}DO`
-  - 示例：`aim_agent_job_type` → `AimAgentJobTypeDO`
+  - 示例：`{table_name}` → `Aim{Domain}{Name}DO`
 
 **注解约束**：
 - [ ] **禁止**在 DO 类上标注 `@JsonFormat`（DO 不涉及序列化给前端）
-- [ ] **禁止**在 DO 类或对应的 `AimXxxServiceImpl` 上标注 `@Transactional`
+- [ ] **禁止**在 DO 类或对应的 `Aim{Name}ServiceImpl` 上标注 `@Transactional`
 - [ ] 使用 `@Data` 注解（或 `@Getter`/`@Setter`）
 
 **继承与字段**：
@@ -217,24 +217,24 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 - [ ] 删除字段按策略决策选择，非所有表强制要求 `is_deleted`
 
 **Mapper 命名**：
-- [ ] 对应 Mapper 必须以 `Aim` 开头：`AimXxxMapper`
-- [ ] 对应 MP Service 接口位于 `service/mp/`，命名为 `AimXxxService`
-- [ ] 对应 MP Service 实现位于 `service/impl/mp/`，命名为 `AimXxxServiceImpl`，继承 `ServiceImpl<AimXxxMapper, AimXxxDO>`
+- [ ] 对应 Mapper 必须以 `Aim` 开头：`Aim{Name}Mapper`
+- [ ] 对应 MP Service 接口位于 `service/mp/`，命名为 `Aim{Name}Service`
+- [ ] 对应 MP Service 实现位于 `service/impl/mp/`，命名为 `Aim{Name}ServiceImpl`，继承 `ServiceImpl<Aim{Name}Mapper, Aim{Name}DO>`
 
 ### 5.2 命名规则
 
 | 元素 | 命名规范 | 示例 |
 |------|---------|------|
-| DO 类名 | `Aim{Name}DO` | `AimAgentJobTypeDO` |
-| 对应表名 | `aim_{模块}_{业务名}` | `aim_agent_job_type` |
-| MP Service 接口 | `Aim{Name}Service` | `AimAgentJobTypeService` |
-| MP Service 实现 | `Aim{Name}ServiceImpl` | `AimAgentJobTypeServiceImpl` |
-| Mapper | `Aim{Name}Mapper` | `AimAgentJobTypeMapper` |
-| DO 包路径 | `domain/entity/` | `domain/entity/AimJobTypeDO.java` |
+| DO 类名 | `Aim{Name}DO` | `Aim{Domain}{Name}DO` |
+| 对应表名 | `aim_{模块}_{业务名}` | `{table_name}` |
+| MP Service 接口 | `Aim{Name}Service` | `Aim{Domain}{Name}Service` |
+| MP Service 实现 | `Aim{Name}ServiceImpl` | `Aim{Domain}{Name}ServiceImpl` |
+| Mapper | `Aim{Name}Mapper` | `Aim{Domain}{Name}Mapper` |
+| DO 包路径 | `domain/entity/` | `domain/entity/Aim{Name}DO.java` |
 
 ### 5.3 警告规则（违反 = 警告问题）
 
-- [ ] DO/DTO 转换使用手动 `convertToXxx()` 方法，**禁止**使用 `BeanUtils.copyProperties`
+- [ ] DO/DTO 转换使用手动 `convertTo{Name}()` 方法，**禁止**使用 `BeanUtils.copyProperties`
 - [ ] 禁止在循环中单条 CRUD，必须使用批量操作方法（`saveBatch`、`updateBatchById` 等）
 - [ ] DO 中的 `LocalDateTime` 字段不标注 `@JsonFormat`（仅 Response/VO 需要）
 - [ ] SQL 中字段注释完整（`COMMENT '...'`）
@@ -243,7 +243,7 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 
 ## 6. Feign 接口 DoD 检查
 
-> 适用范围：mall-inner-api 模块
+> 适用范围：{inner-api-service} 模块
 
 ### 6.1 强制规则（违反 = 严重问题）
 
@@ -253,9 +253,9 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 - [ ] 返回类型为 `CommonResult<T>`
 
 **参数与响应**：
-- [ ] 请求参数使用 `XxxApiRequest`
-- [ ] 响应参数使用 `XxxApiResponse`
-- [ ] `XxxApiRequest` 写操作必须包含 `operatorId` 字段
+- [ ] 请求参数使用 `{Name}ApiRequest`
+- [ ] 响应参数使用 `{Name}ApiResponse`
+- [ ] `{Name}ApiRequest` 写操作必须包含 `operatorId` 字段
 
 **路径规范**：
 - [ ] 路径前缀为 `/inner/api/v1/`
@@ -265,9 +265,9 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 
 | 元素 | 命名规范 | 示例 |
 |------|---------|------|
-| 接口名 | `{Name}RemoteService` | `JobTypeRemoteService` |
-| 包路径 | `feign/` | `feign/JobTypeRemoteService.java` |
-| Fallback | `{Name}RemoteServiceFallback` | `JobTypeRemoteServiceFallback` |
+| 接口名 | `{Name}RemoteService` | `{Name}RemoteService` |
+| 包路径 | `feign/` | `feign/{Name}RemoteService.java` |
+| Fallback | `{Name}RemoteServiceFallback` | `{Name}RemoteServiceFallback` |
 
 ---
 
@@ -280,7 +280,7 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 **分层约束**：
 - [ ] 门面服务的 ApplicationService 只调用 `RemoteService`（Feign 接口）
 - [ ] 应用服务的 ApplicationService 只调用 `QueryService` 和 `ManageService`
-- [ ] **禁止**直接注入 `Mapper` 或 `AimXxxService`
+- [ ] **禁止**直接注入 `Mapper` 或 `Aim{Name}Service`
 
 **事务约束**：
 - [ ] 不涉及写操作的方法不标注 `@Transactional`
@@ -292,16 +292,16 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 - [ ] 远程通信异常（网络超时等）抛出 `RemoteApiCallException`
 
 **参数转换**：
-- [ ] 门面层 ApplicationService 负责将 `XxxApiResponse` 转换为 `XxxResponse`
+- [ ] 门面层 ApplicationService 负责将 `{Name}ApiResponse` 转换为 `{Name}Response`
 - [ ] 即使字段完全相同，转换也**不得省略**
 
 ### 7.2 命名规则
 
 | 元素 | 命名规范 | 示例 |
 |------|---------|------|
-| 接口名 | `{Name}ApplicationService` | `JobTypeApplicationService` |
-| 实现名 | `{Name}ApplicationServiceImpl` | `JobTypeApplicationServiceImpl` |
-| 包路径 | `service/` | `service/JobTypeApplicationService.java` |
+| 接口名 | `{Name}ApplicationService` | `{Name}ApplicationService` |
+| 实现名 | `{Name}ApplicationServiceImpl` | `{Name}ApplicationServiceImpl` |
+| 包路径 | `service/` | `service/{Name}ApplicationService.java` |
 
 ---
 
@@ -326,9 +326,9 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 
 | 元素 | 命名规范 | 示例 |
 |------|---------|------|
-| 文件名 | `Aim{Name}Mapper.xml` | `AimJobTypeMapper.xml` |
-| 文件位置 | `resources/mapper/` | `resources/mapper/AimJobTypeMapper.xml` |
-| namespace | Mapper 接口全限定名 | `com.aim.mall.agent.employee.mapper.AimJobTypeMapper` |
+| 文件名 | `Aim{Name}Mapper.xml` | `Aim{Name}Mapper.xml` |
+| 文件位置 | `resources/mapper/` | `resources/mapper/Aim{Name}Mapper.xml` |
+| namespace | Mapper 接口全限定名 | `{base_package}.{domain}.employee.mapper.Aim{Name}Mapper` |
 
 ---
 
@@ -375,8 +375,8 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 **文件命名规则**：
 | 产物类型 | 命名格式 | 示例 |
 |----------|----------|------|
-| SQL 脚本 | `{table_name}.sql` | `aim_agent_job_type.sql` |
-| HTTP 测试 | `{module}-api.http` | `job-type-api.http` |
+| SQL 脚本 | `{table_name}.sql` | `{table_name}.sql` |
+| HTTP 测试 | `{module}-api.http` | `{path}-api.http` |
 
 **迭代更新规则**：
 - SQL 文件按表名唯一，新 Feature 使用已有表时追加测试数据
