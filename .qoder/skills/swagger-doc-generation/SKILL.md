@@ -1,6 +1,10 @@
 ---
 name: swagger-doc-generation
 description: 为门面服务 Controller 生成 Swagger 格式 API 文档，采用扁平化目录结构，统一归档至 outputs/swagger/{service-name}/{中文功能}-{ControllerName}Api.md
+version: 1.0.0
+workflow: feature-implementation
+dependencies:
+  - java-code-generation
 ---
 
 # Swagger 文档生成 Skill
@@ -266,12 +270,24 @@ phases:
 
 ## 返回格式
 
+执行完成后返回以下格式：
+
 ```
 Phase 9 完结
 
 Swagger 文档生成（按 Controller 粒度，扁平化目录结构）：
   ✅ outputs/swagger/{service-name-1}/{中文功能描述-1}-{ControllerName-1}Api.md（v{version}，{N}个接口）
   ✅ outputs/swagger/{service-name-2}/{中文功能描述-2}-{ControllerName-2}Api.md（v{version}，{N}个接口）
+
+产出：
+  - API 文档：N 份（按 Controller 隔离）
+  - 更新状态：STATUS.yml Phase 9 status = done
+
+文档规范检查：
+  - 扁平化目录结构：✅ 通过
+  - 完整路径表示：✅ 通过
+  - DTO 字段对齐（totalCount/items）：✅ 通过
+  - 无认证文档模式：✅ 通过
 
 结论：通过 → Phase 9 完成，Program 可进入收尾
 ```

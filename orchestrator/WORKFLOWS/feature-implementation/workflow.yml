@@ -565,11 +565,10 @@ workflow:
         
     - name: swagger_docs
       type: directory
-      description: Swagger API 文档目录（Markdown 格式，按 Controller 隔离）
+      description: Swagger API 文档目录（Markdown 格式，扁平化目录结构）
       path: outputs/swagger/{service-name}/
       structure:
-        - {ControllerName}/
-          - {中文功能描述}-{ControllerName}Api.md
+        - {中文功能描述}-{ControllerName}Api.md
 
   # 可信源定义
   source_of_truth:

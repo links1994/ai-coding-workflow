@@ -1,6 +1,10 @@
 ---
 name: tech-spec-analyzer
 description: 分析技术规格书（tech-spec.yml）的完整性和可实现性，评估其是否满足功能实现要求。在生成 tech-spec 后、代码生成前使用，识别规格缺陷、缺失信息和潜在风险。
+version: 1.0.0
+workflow: feature-implementation
+dependencies:
+  - tech-spec-generation
 ---
 
 # Tech Spec 分析 Skill
@@ -203,14 +207,41 @@ description: 分析技术规格书（tech-spec.yml）的完整性和可实现性
 
 ## 返回格式
 
+执行完成后返回以下格式：
+
 ```
 状态：通过 / 有条件通过 / 不通过
-阻塞问题数：N
-警告问题数：N
-提示建议数：N
 
-报告路径：workspace/artifacts/tech-spec-analysis-report.md
+问题统计：
+  - 阻塞问题：N 个（必须修复）
+  - 警告问题：N 个（建议修复）
+  - 提示建议：N 个（可选优化）
+
+检查维度：
+  - 完整性：✅ 通过 / ⚠️ 警告 / ❌ 不通过
+  - 接口定义：✅ 通过 / ⚠️ 警告 / ❌ 不通过
+  - 数据模型：✅ 通过 / ⚠️ 警告 / ❌ 不通过
+  - 业务规则：✅ 通过 / ⚠️ 警告 / ❌ 不通过
+  - 时序图/流程图：✅ 通过 / ⚠️ 警告 / ❌ 不通过
+  - 规范合规性：✅ 通过 / ⚠️ 警告 / ❌ 不通过
+  - 可实现性：✅ 通过 / ⚠️ 警告 / ❌ 不通过
+
+产出：
+  - 分析报告：workspace/artifacts/tech-spec-analysis-report.md
+
+下一步：
+  - 状态=通过：进入代码生成阶段
+  - 状态=有条件通过：用户决定是否忽略警告
+  - 状态=不通过：返回 plan 阶段修复 tech-spec
 ```
+
+---
+
+## 相关文档
+
+- 流程定义：`orchestrator/WORKFLOWS/feature-implementation/workflow.yml`
+- 代码生成规范：`.qoder/rules/code-generation/`
+- **规格生成约束**：`.qoder/rules/code-generation/12-spec-generation-constraints.md`
 
 ---
 
