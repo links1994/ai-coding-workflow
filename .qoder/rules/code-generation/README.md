@@ -26,6 +26,7 @@ trigger: always_on
 | 11 | `11-architecture-design.md` | 架构设计规范 | 项目整体架构、服务分层、调用关系、技术栈 |
 | 12 | `12-spec-generation-constraints.md` | 规格生成约束 | tech-spec 生成阶段的 DoD 约束 |
 | 13 | `13-code-templates.md` | 代码模板规范 | 代码生成时的结构模板和占位符规则 |
+| 14 | `14-validation-rules.md` | 验证规则规范 | 输入验证、参数校验、业务规则检查 |
 
 ---
 
@@ -51,7 +52,7 @@ trigger: always_on
 | 架构规范 | 11-architecture-design.md、01-facade-service.md、02-inner-service.md |
 | 编码规范 | 08-service-layer-standards.md、07-data-access-standards.md |
 | 数据规范 | 05-database-standards.md、06-error-code-standards.md |
-| 质量规范 | 10-dod-cards.md |
+| 质量规范 | 10-dod-cards.md、14-validation-rules.md |
 
 ---
 
@@ -82,9 +83,26 @@ trigger: always_on
 当规范之间存在冲突时，按以下优先级处理：
 
 1. **DoD 检查卡**（10-dod-cards.md）- 最高优先级
-2. **架构设计规范**（11-architecture-design.md）
-3. **具体层规范**（01-03）
-4. **基础规范**（04-09）
+2. **规格生成约束**（12-spec-generation-constraints.md）- 次高优先级
+3. **架构设计规范**（11-architecture-design.md）
+4. **具体层规范**（01-03）
+5. **基础规范**（04-09）
+6. **代码模板**（13-code-templates.md）- 最低优先级
+
+### 优先级应用规则
+
+**冲突解决原则**：
+- 高优先级规范覆盖低优先级规范的冲突内容
+- 同优先级规范冲突时，以生成对象最相关的规范为准
+- 所有规范必须服从 DoD 检查卡的强制规则
+
+**典型冲突场景**：
+| 场景 | 高优先级规范 | 低优先级规范 | 处理方式 |
+|------|-------------|-------------|----------|
+| 模板中的命名与命名规范冲突 | 04-naming-standards.md | 13-code-templates.md | 遵循命名规范 |
+| DoD 要求与模板结构冲突 | 10-dod-cards.md | 13-code-templates.md | 遵循 DoD 要求 |
+| 规格约束与架构规范冲突 | 12-spec-generation-constraints.md | 11-architecture-design.md | 遵循规格约束 |
+| 分层规范与目录规范冲突 | 01/02-inner-service.md | 09-directory-structure.md | 遵循分层规范 |
 
 ---
 

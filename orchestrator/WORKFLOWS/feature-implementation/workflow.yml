@@ -696,6 +696,78 @@ workflow:
     require_code_review: true             # 要求代码审查
     idempotent_generation: true           # 基于相同 tech-spec 多次生成结果一致
 
+  # 错误处理配置
+  error_handling:
+    default_strategy: pause_and_report    # 默认错误处理策略
+    max_retries: 3                        # 默认最大重试次数
+    retry_delay: 5s                       # 默认重试间隔
+    
+    # 阶段级别错误处理
+    phase_specific:
+      research:
+        strategy: report_and_continue     # 研究阶段错误不阻塞
+      decision:
+        strategy: pause_and_report        # 决策阶段需要人工确认
+      plan:
+        strategy: pause_and_report        # 计划阶段需要人工确认
+      execute:
+        strategy: auto_retry              # 执行阶段自动重试
+        max_retries: 3
+        rollback_on_failure: true         # 失败时支持回滚
+      feedback:
+        strategy: report_and_continue     # 反馈阶段错误可继续
+      review:
+        strategy: pause_and_report        # 审查阶段需要人工确认
+    
+    # 步骤级别错误处理（覆盖阶段配置）
+    step_specific:
+      - step_id: generate_feign_interfaces
+        strategy: auto_retry
+        max_retries: 3
+      - step_id: generate_application_layer
+        strategy: auto_retry
+        max_retries: 2
+        fallback_action: generate_partial  # 失败时生成部分代码
+      - step_id: generate_facade_layer
+        strategy: auto_retry
+        max_retries: 2
+      - step_id: review_code_quality
+        strategy: report_and_continue      # 代码审查问题可继续
+      
+    # 特定错误类型处理
+    error_types:
+      - type: validation_error
+        strategy: pause_and_report
+        description: 验证错误需要人工修正
+      - type: generation_error
+        strategy: auto_retry
+        max_retries: 3
+        description: 生成错误可重试
+      - type: io_error
+        strategy: auto_retry
+        max_retries: 5
+        retry_delay: 2s
+        description: IO 错误使用更频繁的重试
+      - type: dependency_error
+        strategy: pause_and_report
+        description: 依赖错误需要检查环境
+      - type: resource_error
+        strategy: compress_and_continue
+        description: 资源错误尝试压缩上下文后继续
+    
+    # 检查点配置
+    checkpoint:
+      enabled: true
+      on_phase_complete: true             # 阶段完成时保存检查点
+      on_error: true                      # 错误发生时保存检查点
+      max_checkpoints: 10                 # 最大检查点数量
+    
+    # 错误升级策略
+    escalation:
+      enabled: true
+      threshold: 3                        # 连续错误次数阈值
+      action: delegate_to_user            # 升级动作：委托给用户
+
   # 产物模板路径
   templates:
     tech_spec: _TEMPLATE/tech-spec.yml

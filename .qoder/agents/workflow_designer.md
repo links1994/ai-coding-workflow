@@ -291,6 +291,94 @@ validate_<target>:
 # 归档类命令
 archive:
   description: 归档产物到知识库
+
+# 错误处理类命令
+handle_<error_type>:
+  - handle_error              # 通用错误处理
+  - handle_validation_error   # 验证错误处理
+  - handle_generation_error   # 生成错误处理
+  - handle_io_error           # IO 错误处理
+  - handle_dependency_error   # 依赖错误处理
+  - handle_resource_error     # 资源错误处理（如上下文超限）
+  - handle_timeout            # 超时处理
+
+# 恢复类命令
+recover_<strategy>:
+  - recover_retry             # 重试当前步骤
+  - recover_rollback          # 回滚到检查点
+  - recover_skip              # 跳过当前步骤
+  - recover_abort             # 终止流程
+  - recover_delegate          # 委托给人工处理
+
+# 检查点命令
+checkpoint:
+  - save_checkpoint           # 保存当前状态检查点
+  - restore_checkpoint        # 从检查点恢复
+  - list_checkpoints          # 列出可用检查点
+```
+
+### 错误处理命令详细说明
+
+#### handle_error 命令
+
+```yaml
+action: handle_error
+inputs:
+  - error_context          # 错误上下文信息
+  - error_type             # 错误类型
+  - severity               # 严重程度 (P0/P1/P2/P3)
+outputs:
+  - error_report           # 错误报告
+  - recommended_action     # 建议的处理动作
+decisions:
+  - 根据错误类型选择处理策略
+  - 根据严重程度决定是否暂停流程
+```
+
+#### recover_retry 命令
+
+```yaml
+action: recover_retry
+inputs:
+  - retry_count            # 当前重试次数
+  - max_retries            # 最大重试次数
+  - retry_delay            # 重试间隔
+outputs:
+  - retry_result           # 重试结果
+conditions:
+  - 仅适用于可重试的错误（如网络超时、IO 错误）
+  - 超过最大重试次数后升级处理策略
+```
+
+#### recover_rollback 命令
+
+```yaml
+action: recover_rollback
+inputs:
+  - checkpoint_id          # 检查点标识
+  - rollback_scope         # 回滚范围 (step/phase/full)
+outputs:
+  - rollback_result        # 回滚结果
+  - restored_state         # 恢复后的状态
+conditions:
+  - 需要存在有效的检查点
+  - 回滚后需要重新执行后续步骤
+```
+
+#### save_checkpoint 命令
+
+```yaml
+action: save_checkpoint
+inputs:
+  - checkpoint_name        # 检查点名称（可选）
+  - checkpoint_data        # 需要保存的状态数据
+outputs:
+  - checkpoint_id          # 检查点标识
+  - checkpoint_path        # 检查点文件路径
+triggers:
+  - 阶段完成时自动触发
+  - 错误发生时自动触发
+  - 手动触发（关键决策点前）
 ```
 
 ### 命令与 Agent/Skill 的关系
