@@ -62,6 +62,29 @@ your-project/
 
 ---
 
+## 工作流快速选择指南
+
+**不确定用哪个工作流？按场景选择：**
+
+| 你的场景 | 推荐工作流 | 指令示例 |
+|----------|-----------|----------|
+| 我有一个 PRD，需要拆分成可执行的任务 | req-decomposition | "基于 PRD 拆分需求" |
+| 我要实现一个具体的 Feature | feature-implementation | "实现 F-001 的代码" |
+| 我要测试已实现的接口 | http-api-testing | "测试 F-001 的接口" |
+
+**工作流关系：**
+```
+PRD ──► req-decomposition ──► Feature 列表
+                                │
+                                ▼
+                     feature-implementation ──► 代码
+                                │
+                                ▼
+                       http-api-testing ──► 测试报告
+```
+
+---
+
 ## 状态来源
 
 - **Programs 列表**: 扫描 `outputs/PROGRAMS/` 目录
