@@ -5,6 +5,7 @@ version: 1.0.0
 workflow: http-api-testing
 dependencies:
   - http-test-generator
+  - env-check
 ---
 
 # HTTP 测试执行 Skill
@@ -45,22 +46,16 @@ dependencies:
 
 ## 环境检查
 
-执行测试前必须验证：
+**使用 `env-check` skill 执行（详见 `.qoder/skills/env-check/SKILL.md`）**
 
-### Nacos 检查
-- [ ] Nacos 服务可访问
-- [ ] 配置可读取
-- [ ] 服务注册信息完整
+1. 从 `orchestrator/ALWAYS/RESOURCE-MAP.yml` 读取目标环境配置
+2. 生成并执行 `check_services.py` 脚本
+3. 检查完成后自动清理临时文件
 
-### 数据库检查
-- [ ] 数据库可连接
-- [ ] 表结构存在
-- [ ] 测试数据可写入
-
-### 服务检查
-- [ ] 目标服务健康
-- [ ] 接口可访问
-- [ ] 响应正常
+### 检查项清单
+- [ ] Nacos 可访问
+- [ ] 目标服务 `/actuator/health` 返回 UP
+- [ ] 全部服务就绪后执行测试
 
 ---
 
@@ -127,4 +122,6 @@ dependencies:
 ## 相关文档
 
 - 流程定义：`orchestrator/WORKFLOWS/http-api-testing/workflow.yml`
+- 环境配置：`orchestrator/ALWAYS/RESOURCE-MAP.yml`
+- 环境检查 Skill：`.qoder/skills/env-check/SKILL.md`
 - 测试生成 Skill：`.qoder/skills/http-test-generator/SKILL.md`

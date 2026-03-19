@@ -300,72 +300,232 @@ workflow:
           
     execute:
       enabled: true
-      description: 基于 tech-spec 生成代码, 委托 code-generator Agent 执行
+      description: |
+        基于 tech-spec 分步委托独立 Agent 生成代码。
+        每个步骤委托独立 Sub-Agent 执行，上下文相互隔离，通过 STATUS.yml 传递产物路径。
+        
+        ## Sub-Agent 隔离原则
+        
+        每个 delegate_to_agent 步骤均以「委托：{agent-name}」方式触发：
+        - 每次委托启动全新上下文，不继承前一步骤的代码内容
+        - 步骤完成后将产物文件路径写入 STATUS.yml，供后续步骤按路径从磁盘读取
+        - 禁止在步骤间通过内存传递已生成代码的完整内容
       agent: code-generator
       steps:
         - id: generate_database
-          name: 生成数据库结构
+          name: 生成数据库结构（建表 SQL + 测试数据 SQL + Entity/DO 类）
           action: delegate_to_agent
           agent: code-generator
           skill: java-code-generation
-          inputs: [tech_spec, generation_plan]
+          delegation: "委托：code-generator"
+          context_isolation: true
+          inputs:
+            - tech_spec                    # 技术规格书（唯一可信源）
+            - generation_plan              # 文件清单
+            - rule:05-database-standards.md
+            - rule:04-naming-standards.md
+            - rule:09-directory-structure.md
           outputs: [database_schema, entity_classes, test_data_sql]
+          output_paths:
+            database_schema: outputs/schemal/{table_name}.sql
+            entity_classes: repos/{app-service}/src/main/java/{package}/domain/entity/
           step_file: steps/execute/01-generate-database.md
           condition: 当 tech-spec 包含数据模型时
-          description: 生成建表 SQL、测试数据 SQL 和 Entity/DO 类
+          status_update: |
+            完成后将以下路径写入 ARTIFACTS.yml execute:
+            - database_schema: outputs/schemal/{table_name}.sql
+            - entity_classes_path: repos/{app-service}/.../domain/entity/
+          description: |
+            【委托：code-generator】生成建表 SQL、测试数据 SQL 和 Entity/DO 类。
+            
+            本步骤上下文仅包含 tech-spec + 数据库/命名/目录规范，不加载其他代码内容。
+            必须实际写入以下文件：
+            1. `outputs/schemal/{table_name}.sql` — 建表 SQL + 测试数据 SQL
+            2. `{app-service}/domain/entity/Aim{Name}DO.java` — Entity/DO 类
+            
+            后续步骤通过路径从磁盘读取，不在内存中传递代码内容。
+          must_generate:
+            - outputs/schemal/{table_name}.sql
+            - repos/{app-service}/src/main/java/{package}/domain/entity/Aim{Name}DO.java
           
         - id: generate_feign_interfaces
           name: 生成 Feign 接口
           action: delegate_to_agent
           agent: code-generator
           skill: java-code-generation
-          inputs: [tech_spec, generation_plan]
+          delegation: "委托：code-generator"
+          context_isolation: true
+          inputs:
+            - tech_spec                    # 技术规格书（唯一可信源）
+            - generation_plan              # 文件清单
+            - rule:03-feign-interface.md
+            - rule:04-naming-standards.md
+            - rule:06-error-code-standards.md
           outputs: [feign_interfaces]
+          output_paths:
+            feign_interfaces: repos/mall-inner-api/mall-agent-api/src/main/java/
           step_file: steps/execute/01-generate-feign-interfaces.md
-          description: 基于 tech-spec 接口定义生成 mall-inner-api 代码
+          status_update: |
+            完成后将以下路径写入 ARTIFACTS.yml execute:
+            - feign_interfaces_path: repos/mall-inner-api/mall-agent-api/src/main/java/
+          description: |
+            【委托：code-generator】基于 tech-spec 接口定义生成 mall-inner-api 代码。
+            
+            本步骤上下文仅包含 tech-spec + Feign/命名/错误码规范，不加载其他代码内容。
+            后续步骤通过路径从磁盘读取 Feign 接口，不在内存中传递。
           
         - id: generate_application_layer
           name: 生成应用服务层
           action: delegate_to_agent
           agent: code-generator
           skill: java-code-generation
-          inputs: [tech_spec, generation_plan, feign_interfaces, database_schema]
+          delegation: "委托：code-generator"
+          context_isolation: true
+          inputs:
+            - tech_spec                    # 技术规格书（唯一可信源）
+            - generation_plan              # 文件清单
+            - rule:02-inner-service.md
+            - rule:07-data-access-standards.md
+            - rule:08-service-layer-standards.md
+            - rule:04-naming-standards.md
+            - rule:09-directory-structure.md
+            - ref:ARTIFACTS.yml#execute.feign_interfaces_path   # 从磁盘读取 Feign 产物路径
+            - ref:ARTIFACTS.yml#execute.entity_classes_path     # 从磁盘读取 DO 类路径
           outputs: [application_layer_code]
+          output_paths:
+            application_layer_code: repos/{app-service}/src/main/java/
           step_file: steps/execute/02-generate-application-layer.md
-          description: 基于 tech-spec 生成应用服务层代码（依赖数据库结构）
+          depends_on: [generate_database, generate_feign_interfaces]
+          status_update: |
+            完成后将以下路径写入 ARTIFACTS.yml execute:
+            - application_layer_path: repos/{app-service}/src/main/java/
+          description: |
+            【委托：code-generator】基于 tech-spec 生成应用服务层代码。
+            
+            本步骤上下文仅包含 tech-spec + 应用服务/数据访问/服务层规范。
+            通过 STATUS.yml 中的路径从磁盘读取前序步骤产物（Feign 接口、DO 类），
+            禁止在内存中接收前序步骤的完整代码内容。
+            
+            生成范围：
+            - Mapper 接口 + XML
+            - Aim{Name}Service（MP Service）接口和实现
+            - QueryService / QueryServiceImpl
+            - ManageService / ManageServiceImpl
+            - ApplicationService / ApplicationServiceImpl
+            - InnerController
           
         - id: generate_facade_layer
           name: 生成门面服务层
           action: delegate_to_agent
           agent: code-generator
           skill: java-code-generation
-          inputs: [tech_spec, generation_plan, feign_interfaces]
+          delegation: "委托：code-generator"
+          context_isolation: true
+          inputs:
+            - tech_spec                    # 技术规格书（唯一可信源）
+            - generation_plan              # 文件清单
+            - rule:01-facade-service.md
+            - rule:08-service-layer-standards.md
+            - rule:04-naming-standards.md
+            - rule:09-directory-structure.md
+            - ref:ARTIFACTS.yml#execute.feign_interfaces_path   # 从磁盘读取 Feign 产物路径
           outputs: [facade_layer_code]
+          output_paths:
+            facade_layer_code: repos/{facade-service}/src/main/java/
           step_file: steps/execute/03-generate-facade-layer.md
-          description: 基于 tech-spec 生成门面服务层代码
+          status_update: |
+            完成后将以下路径写入 ARTIFACTS.yml execute:
+            - facade_layer_path: repos/{facade-service}/src/main/java/
+          description: |
+            【委托：code-generator】基于 tech-spec 生成门面服务层代码。
+            
+            本步骤上下文仅包含 tech-spec + 门面服务/服务层规范。
+            通过 STATUS.yml 中的路径从磁盘读取 Feign 接口，
+            禁止在内存中接收前序步骤的完整代码内容。
           
         - id: generate_tests
           name: 生成 HTTP 测试文件
           action: delegate_to_agent
           agent: code-generator
           skill: http-test-generator
-          inputs: [tech_spec, facade_layer_code, database_schema, test_data_sql]
+          delegation: "委托：code-generator"
+          context_isolation: true
+          mandatory: true
+          depends_on: [generate_facade_layer]
+          inputs:
+            - tech_spec                    # 技术规格书（唯一可信源，含接口定义和测试数据）
           outputs: [test_files]
           output_path: outputs/data/http/
-          naming_rule: 按功能模块命名，如 job-type-api.http
+          naming_rule: 按功能模块命名，如 knowledge-api.http
           step_file: steps/execute/04-generate-http-tests.md
+          status_update: |
+            完成后将以下路径写入 ARTIFACTS.yml execute:
+            - test_files_path: outputs/data/http/{module}-api.http
           description: |
-            基于 tech-spec 生成 HTTP 测试文件。
+            【委托：code-generator】基于 tech-spec 生成 HTTP 测试文件。
+            
+            本步骤上下文仅包含 tech-spec，直接从接口定义章节提取接口信息生成测试用例，
+            无需读取已生成的代码文件。
+            
             输出路径：outputs/data/http/{module}-api.http
             命名规则：按功能模块命名，后续迭代直接修改旧文件
+            测试用例需覆盖：正常场景、异常场景、边界场景
+
+        - id: generate_swagger_docs
+          name: 生成 Swagger API 文档
+          action: delegate_to_agent
+          agent: code-generator
+          skill: swagger-doc-generation
+          delegation: "委托：code-generator"
+          context_isolation: true
+          mandatory: true
+          depends_on: [generate_tests]
+          inputs:
+            - tech_spec                    # 技术规格书（含门面接口定义）
+            - ref:ARTIFACTS.yml#execute.facade_layer_path    # 从磁盘读取门面层产物路径
+          outputs: [swagger_docs]
+          condition: 当 Program 涉及门面服务 Controller 变更时（几乎所有 Feature 均满足）
+          step_file: steps/review/02-generate-swagger.md
+          status_update: |
+            完成后将实际路径追加写入 ARTIFACTS.yml execute.swagger_docs:
+            - outputs/swagger/mall-admin/{中文功能}-{ControllerName}Api.md
+            - outputs/swagger/mall-toc-service/{中文功能}-{ControllerName}Api.md
+          description: |
+            【委托：code-generator】**本步骤强制执行，不得跳过。**
+            
+            本步骤上下文仅包含 tech-spec + 门面层产物路径，不加载其他代码内容。
+            
+            为所有门面服务 Controller 生成 Swagger API 文档：
+            - mall-admin 涉及的 Controller → `outputs/swagger/mall-admin/{中文功能}-{ControllerName}Api.md`
+            - mall-toc-service 涉及的 Controller → `outputs/swagger/mall-toc-service/{中文功能}-{ControllerName}Api.md`
+            
+            每个 Controller 对应一个独立文档文件，包含：
+            - 接口列表总览表格
+            - 每个接口的请求参数、响应字段、示例 JSON、失败场景
+            - 状态码枚举说明
+            
+            支持增量更新，已有文件按接口追加，不覆盖未变更接口内容。
+            
+            **完成后必须在 ARTIFACTS.yml execute 中记录生成的 Swagger 文件路径。**
           
         - id: confirm_code_generation
           name: 确认代码生成完成
           action: confirm
-          inputs: [application_layer_code, facade_layer_code, feign_interfaces, database_schema]
+          depends_on: [generate_swagger_docs]
+          inputs: [application_layer_code, facade_layer_code, feign_interfaces, database_schema, test_files, swagger_docs]
           outputs: [code_generation_confirmed]
           description: |
-            展示生成的代码文件清单，等待用户确认。
+            ## 产物清单展示
+            
+            向用户展示所有已生成文件，格式示例：
+            ```
+            ✅ mall-inner-api      - {N} 个文件
+            ✅ 应用服务层          - {N} 个文件  
+            ✅ 门面服务层          - {N} 个文件
+            ✅ 数据库 SQL          - outputs/schemal/{table_name}.sql
+            ✅ HTTP 测试文件       - outputs/data/http/{module}-api.http
+            ✅ Swagger 文档        - outputs/swagger/{service}/{ControllerName}Api.md
+            ```
             
             询问："代码生成已完成，是否还有其他需要调整或补充的内容？"
           require_confirmation: true
@@ -422,7 +582,7 @@ workflow:
             - test_data_sql
             - code_quality_report
             - completeness_check
-            - swagger_docs
+            - ref:ARTIFACTS.yml#execute.swagger_docs   # Swagger 文档路径（execute 阶段已生成）
           outputs: [implementation_report]
           step_file: steps/review/03-generate-implementation-report.md
           description: 整合所有产物生成最终的实现报告
@@ -445,18 +605,11 @@ workflow:
           
         - id: generate_swagger_docs
           name: 生成 Swagger API 文档
-          action: delegate_to_agent
-          agent: code-generator
-          skill: swagger-doc-generation
-          inputs: [tech_spec, facade_layer_code, application_layer_code, program_id]
-          outputs: [swagger_docs]
-          condition: 当 Program 涉及门面服务 Controller 变更时
-          step_file: steps/review/02-generate-swagger.md
+          action: skip
           description: |
-            委托 swagger-doc-generation Skill 生成 API 文档。
-            输出路径：outputs/swagger/{service-name}/{ControllerName}/{中文功能描述}-{ControllerName}Api.md
-            支持增量更新，保留未变更接口内容。
-          
+            **本步骤已内移入 execute 阶段（generate_swagger_docs 步骤），在代码生成完成后、confirm 前强制执行。**
+            此占位保留以维持步骤 ID 引用兼容性。
+          skip: true
         - id: archive_artifacts
           name: 归档产物
           action: archive

@@ -1,5 +1,5 @@
 ---
-name: architect
+name: architect-designer
 description: 系统架构设计专家。在需要进行技术选型、架构设计、模块划分、接口设计时主动使用。擅长分析需求并给出清晰的架构方案。
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---

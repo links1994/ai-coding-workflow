@@ -1,6 +1,29 @@
 ﻿# 资源索引 — 由 init.ps1 自动生成
 # 场景: dev-team
 
+# ============================================================
+# 环境配置
+# ============================================================
+environments:
+  local:
+    desc: 本地开发测试环境
+    nacos:
+      server_addr: http://192.168.110.101:8848
+      namespace: ""        # public 命名空间
+      username: nacos
+      password: nacos
+    services:
+      mall-agent-employee-service:
+        url: http://192.168.110.101:8094
+        health: /actuator/health
+      mall-admin:
+        url: http://192.168.110.101:8979
+        health: /actuator/health
+      mall-toc-service:
+        url: http://192.168.110.101:9201
+        health: /actuator/health
+
+
 repos:
   mall-admin:
     path: outputs/code/repos/mall-admin

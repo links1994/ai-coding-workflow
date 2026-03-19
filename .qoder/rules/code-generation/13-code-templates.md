@@ -250,7 +250,8 @@ import lombok.EqualsAndHashCode;
 @TableName("{table_name}")
 public class Aim{Name}DO extends BaseDO {
 
-    private static final long serialVersionUID = 1L;
+    @Serial
+    private static final long serialVersionUID = -1L;
 
     /** 名称 */
     @TableField("name")
@@ -456,9 +457,7 @@ public class {Name}QueryServiceImpl implements {Name}QueryService {
                 .map(this::convertToApiResponse)
                 .collect(Collectors.toList());
         
-        CommonResult.PageData<{Name}ApiResponse> pageData = new CommonResult.PageData<>();
-        pageData.setTotalCount(total);
-        pageData.setItems(items);
+        CommonResult.PageData<{Name}ApiResponse> pageData = new CommonResult.PageData<>(total, items);
         return pageData;
     }
 
@@ -731,6 +730,7 @@ import java.io.Serializable;
 @Data
 public class {Name}CreateRequest implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -1L;
 
     /** 名称 */
@@ -762,6 +762,7 @@ import java.io.Serializable;
 @Data
 public class {Name}CreateApiRequest implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -1L;
 
     /** 名称 */
@@ -794,6 +795,7 @@ import java.time.LocalDateTime;
 @Data
 public class {Name}Response implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -1L;
 
     /** ID */

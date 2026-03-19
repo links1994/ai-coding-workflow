@@ -56,7 +56,7 @@ Controller（接口层，参数校验）
 |---------------|---------------------------------------------------------------------|-------------------------------------------------|
 | 路径参数 | 允许，最多 1 个，且必须放在 URL 最后 | **严禁**使用 `@PathVariable` |
 | HTTP 方法 | 完整 RESTful（GET / POST / PUT / DELETE） | 仅 GET / POST，禁止 PUT / DELETE |
-| 参数传递 | GET 用 `@RequestParam`；POST/PUT/DELETE 用 `@RequestBody` | ≤ 2 个基础类型用 `@RequestParam`；其他一律用 `@RequestBody` |
+| 参数传递 | GET 用 `@RequestParam`；POST/PUT/DELETE：业务参数（排除 `@RequestHeader`、`pageNum`/`pageSize` 等常规参数）**> 2 个**时封装为 `@RequestBody`，≤ 2 个业务参数可用 `@RequestParam` | ≤ 2 个基础类型用 `@RequestParam`；其他一律用 `@RequestBody` |
 | 参数校验 | 使用 `@Valid` + `jakarta.validation` 注解 | **禁止 `@Valid`**，手动编写 `validate{Name}()` 方法 |
 | 请求对象 | `{Name}Request`（前端请求） | `{Name}ApiRequest`（写操作必含 `operatorId` 字段） |
 | 返回对象 | `{Name}Response` / `{Name}VO`（含 `@JsonFormat`） | `{Name}ApiResponse`（含 `@JsonFormat`） |

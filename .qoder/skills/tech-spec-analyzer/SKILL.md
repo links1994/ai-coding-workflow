@@ -28,7 +28,7 @@ dependencies:
 | tech_spec | file | 技术规格书路径（tech-spec.md，Markdown 格式） |
 | feature_definition | object | Feature 原始定义（可选，用于对比） |
 | target_services | array | 涉及的服务列表 |
-| code_generation_standards | object | 代码生成规范（包含 12-spec-generation-constraints.md） |
+| code_generation_standards | object | 代码生成规范（包含 12-spec-generation-constraints.md 规范引用索引） |
 
 ---
 
@@ -94,7 +94,7 @@ dependencies:
 
 ### 6. 规范合规性检查
 
-基于 `12-spec-generation-constraints.md` 检查规格是否符合代码生成约束：
+基于 `12-spec-generation-constraints.md` 引用索引及对应权威规范文件，检查规格是否符合代码生成约束：
 
 | 检查项 | 通过标准 | 常见问题 |
 |--------|----------|----------|
@@ -135,7 +135,7 @@ dependencies:
 3. **数据模型检查** → 识别模型问题
 4. **业务规则检查** → 识别规则缺陷
 5. **时序图和流程图检查** → 识别调用链和业务流程问题
-6. **规范合规性检查** → 识别是否符合代码生成约束（基于 12-spec-generation-constraints.md）
+6. **规范合规性检查** → 识别是否符合代码生成约束（通过 12-spec-generation-constraints.md 索引指向各权威规范文件）
 7. **可实现性评估** → 识别实施风险
 
 ### 步骤 3：汇总问题

@@ -186,9 +186,11 @@ updated_by: {Program-ID}
 
 #### 请求参数
 
-| 字段 | 类型 | 是否必填 | 说明 |
-|------|------|---------|------|
-| {field} | {type} | 是/否 | {描述 + 约束} |
+> 参数位置说明：**Path**（路径参数，嵌入 URL）｜**Query**（URL 查询参数，`?key=value`）｜**Body**（请求体，JSON 格式）
+
+| 字段 | 类型 | 参数位置 | 是否必填 | 说明 |
+|------|------|---------|---------|------|
+| {field} | {type} | Path/Query/Body | 是/否 | {描述 + 约束} |
 
 #### 响应结构
 
@@ -212,6 +214,11 @@ updated_by: {Program-ID}
 - 每个 Controller 类对应一个 `##` 二级章节
 - 每个接口方法对应一个 `###` 三级章节
 - 基础类型（`String`、`Long`、`Integer`、`Boolean`）直接标注，List 类型标注为 `Array<{元素类型}>`
+- **参数位置（Parameter Location）**：每个参数必须标注以下三种之一：
+  - `Path`：路径参数（`@PathVariable`），嵌入 URL 路径，如 `/detail/{id}`
+  - `Query`：查询参数（`@RequestParam`），拼接在 URL `?` 后
+  - `Body`：请求体（`@RequestBody`），以 JSON 格式放在 HTTP Body 中；Body 类型参数在表中展开为各字段行，每行均标注 `Body`
+  - **禁止**省略参数位置列，也**不列出** Header 参数
 - **完整路径表示 (Full Path Representation)**：API 路径必须包含 `/{service-name}` 前缀，如 `/{facade-service}/admin/api/v1/{path}`
 - **无认证文档模式 (Auth-less Documentation Mode)**：文档中**不列出** `@RequestHeader` 参数（如 `X-User-Token`），也不在参数表中描述认证信息
 - **DTO 字段对齐 (DTO Field Alignment)**：分页接口响应 data 内容必须严格按以下结构描述（字段命名不得替换）：
@@ -259,7 +266,7 @@ phases:
 - [ ] 输出目录 `outputs/swagger/{service-name}/` 已按规则创建
 - [ ] 每份文档均包含完整 Frontmatter（`service`、`controller`、`module`、`title`、`version`、`updated_at`、`updated_by`）
 - [ ] 每份文档覆盖该 Controller 的全部接口（无遗漏）
-- [ ] 请求参数表包含字段类型和是否必填标注（**不包含** `@RequestHeader` 认证参数）
+- [ ] 请求参数表包含字段类型、**参数位置**（Path / Query / Body）和是否必填标注（**不包含** `@RequestHeader` 认证参数）
 - [ ] API 路径采用**完整路径表示**，包含 `/{service-name}` 前缀
 - [ ] 分页响应严格遵循 **DTO 字段对齐**，使用 `totalCount` + `items` 字段名
 - [ ] 响应结构描述完整（含 `data` 字段详细说明）
@@ -288,6 +295,7 @@ Swagger 文档生成（按 Controller 粒度，扁平化目录结构）：
   - 完整路径表示：✅ 通过
   - DTO 字段对齐（totalCount/items）：✅ 通过
   - 无认证文档模式：✅ 通过
+  - 参数位置标注（Path/Query/Body）：✅ 通过
 
 结论：通过 → Phase 9 完成，Program 可进入收尾
 ```

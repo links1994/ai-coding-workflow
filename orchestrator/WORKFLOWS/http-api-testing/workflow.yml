@@ -25,15 +25,24 @@ workflow:
           inputs: [target_services, nacos_config, database_config]
           outputs: [environment_status]
           step_file: steps/research/02-check-environment.md
+          skill: env-check
+          skill_config:
+            env_source: orchestrator/ALWAYS/RESOURCE-MAP.yml
+            default_env: local
+            script_template: .qoder/skills/env-check/scripts/check_services_template.py
+            tmp_script: check_services.py
+            cleanup_after: true
           description: |
             验证测试环境是否满足要求：
-            1. Nacos 服务是否可访问（配置中心）
-            2. 数据库是否可连接
-            3. 目标服务是否已部署
+            1. 从 RESOURCE-MAP.yml 读取目标环境配置（默认 local）
+            2. 生成并执行 check_services.py 检查脚本
+            3. Nacos 服务是否可访问（配置中心）
+            4. 目标服务健康检查（/actuator/health）
+            5. 脚本执行完成后自动清理临时文件
 
     decision:
       enabled: true
-      description: 确定测试策略和生成测试用例
+      description: 确定测试策略
       steps:
         - id: determine_test_strategy
           name: 确定测试策略
@@ -46,29 +55,8 @@ workflow:
             - 正常场景测试（必填参数、完整参数）
             - 异常场景测试（参数缺失、非法值、边界值）
             - 依赖测试（上下游接口调用链）
-
-        - id: generate_test_cases
-          name: 生成测试用例
-          action: generate
-          inputs: [test_strategy, tech_spec]
-          outputs: [test_cases]
-          step_file: steps/decision/02-generate-test-cases.md
-          description: |
-            生成标准化测试用例文件：
-            - 每个接口生成多个测试场景
-            - 包含请求参数、预期响应、断言规则
-            - 标注测试优先级（P0/P1/P2）
             
-        - id: confirm_test_cases
-          name: 确认测试用例
-          action: confirm
-          inputs: [test_cases]
-          outputs: [cases_confirmed]
-          description: |
-            展示生成的测试用例清单，等待用户确认。
-            
-            询问："测试用例已生成，是否还有其他需要补充的测试场景？"
-          require_confirmation: true
+            注意：测试用例的实际生成由 execute 阶段委托 test-generator Agent 完成。
 
     plan:
       enabled: true
@@ -102,10 +90,39 @@ workflow:
       enabled: true
       description: 执行自动化测试
       steps:
+        - id: delegate_test_generation
+          name: 委托生成测试用例与测试脚本
+          action: delegate
+          agent: test-generator
+          inputs: [test_strategy, tech_spec, environment_status]
+          outputs: [test_cases, test_plan, http_test_files]
+          description: |
+            委托 test-generator Agent 完成以下工作：
+            1. 基于 tech-spec 生成完整测试用例（正常/异常/边界场景）
+            2. 生成测试执行计划（test-plan.yml）
+            3. 生成 HTTP 测试脚本文件（{module}-api.http）
+            
+            产出路径：
+            - workspace/outputs/testing/test-cases.yml
+            - workspace/outputs/testing/test-plan.yml
+            - outputs/data/http/{module}-api.http
+          mandatory: true
+
+        - id: confirm_test_cases_ready
+          name: 确认测试用例已就绪
+          action: confirm
+          inputs: [test_cases, test_plan, http_test_files]
+          outputs: [test_cases_confirmed]
+          description: |
+            展示生成的测试用例清单和测试脚本，等待用户确认。
+            
+            询问："测试用例与测试脚本已生成完毕，是否还有需要补充的测试场景？确认后将开始执行自动化测试。"
+          require_confirmation: true
+
         - id: run_api_tests
           name: 执行 API 测试
           action: execute
-          inputs: [test_plan, prepared_test_data]
+          inputs: [test_cases, test_plan, prepared_test_data, test_cases_confirmed]
           outputs: [test_results, test_report]
           step_file: steps/execute/01-run-api-tests.md
           description: |

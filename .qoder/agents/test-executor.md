@@ -14,10 +14,25 @@ tools: [Read, Write, Edit, search_codebase, grep_code, run_in_terminal]
 
 ## 核心职责
 
-1. **环境验证**：检查 Nacos、数据库、目标服务是否可用
-2. **测试执行**：按测试计划执行 HTTP 接口测试
-3. **结果收集**：收集测试结果，分类统计
-4. **报告生成**：生成详细的测试报告
+1. **前置确认**：确认 test-generator Agent 已生成测试用例与测试脚本
+2. **环境验证**：检查 Nacos、数据库、目标服务是否可用
+3. **测试执行**：按测试计划执行 HTTP 接口测试
+4. **结果收集**：收集测试结果，分类统计
+5. **报告生成**：生成详细的测试报告
+
+---
+
+## 前置条件
+
+**必须在执行测试前验证以下产物已存在：**
+
+| 产物 | 路径 | 说明 |
+|------|------|------|
+| 测试用例 | `workspace/outputs/testing/test-cases.yml` | 由 test-generator Agent 生成 |
+| 测试计划 | `workspace/outputs/testing/test-plan.yml` | 由 test-generator Agent 生成 |
+| HTTP 测试脚本 | `outputs/data/http/{module}-api.http` | 由 test-generator Agent 生成 |
+
+若上述产物不存在，**禁止直接执行测试**，应先触发 `delegate_test_generation` 步骤委托 `test-generator` Agent 完成生成。
 
 ---
 
@@ -30,6 +45,18 @@ tools: [Read, Write, Edit, search_codebase, grep_code, run_in_terminal]
 ---
 
 ## 执行流程
+
+### 步骤 0：确认测试产物就绪
+
+验证 test-generator Agent 的产物是否已存在：
+
+```
+□ workspace/outputs/testing/test-cases.yml 存在
+□ workspace/outputs/testing/test-plan.yml 存在
+□ outputs/data/http/{module}-api.http 存在
+```
+
+**产物缺失处理**：停止执行，提示用户先运行 `delegate_test_generation` 步骤（委托 test-generator Agent）。
 
 ### 步骤 1：环境检查
 

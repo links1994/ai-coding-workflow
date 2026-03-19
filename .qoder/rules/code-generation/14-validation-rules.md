@@ -3,9 +3,10 @@
 > **适用范围**：所有输入验证、参数校验、业务规则检查
 >
 > **关联规范**：
-> - [门面服务规范](./01-facade-service.md)
-> - [应用服务规范](./02-inner-service.md)
-> - [服务层规范](./08-service-layer-standards.md)
+> - 门面服务 `@Valid` 校验规则详见 [`01-facade-service.md §2`](./01-facade-service.md)
+> - 应用服务手动 `validate()` 规则详见 [`02-inner-service.md §2`](./02-inner-service.md)
+> - 远程调用结果验证详见 [`00-common-constraints.md §2`](./00-common-constraints.md)
+> - operatorId 规则详见 [`00-common-constraints.md §6`](./00-common-constraints.md)
 
 ---
 
@@ -15,8 +16,8 @@
 
 | 层级 | 验证方式 | 验证内容 | 错误处理 |
 |------|----------|----------|----------|
-| **Controller（门面）** | `@Valid` + 注解 | 必填字段、格式、范围 | 返回 400 错误 |
-| **Controller（内部）** | 手动 `validate()` 方法 | 必填字段、业务规则 | 返回业务错误码 |
+| **Controller（门面）** | `@Valid` + 注解（详见 `01-facade-service.md §2`） | 必填字段、格式、范围 | GlobalExceptionHandler 处理 |
+| **Controller（内部）** | 手动 `validate()` 方法（详见 `02-inner-service.md §2`） | 必填字段、业务规则 | 返回业务错误码 |
 | **ApplicationService** | 断言 + 业务校验 | 业务逻辑、权限 | 抛出 BusinessException |
 | **ManageService** | 数据存在性校验 | 记录存在性、状态 | 抛出 BusinessException |
 | **数据库** | 约束 | 唯一性、外键 | 数据库异常 |
@@ -31,21 +32,9 @@
 
 ## 门面 Controller 验证
 
-### 使用 `@Valid` 注解
+> `@Valid` 注解用法及常用验证注解详见 `01-facade-service.md §2`
 
-```java
-@PostMapping("/create")
-public CommonResult<Long> create(
-        @RequestBody @Valid {Name}CreateRequest request,
-        @RequestHeader(AuthConstant.USER_TOKEN_HEADER) String user) {
-    // 验证通过后才进入方法体
-    Long operatorId = UserInfoUtil.getUserInfo(user).getId();
-    request.setOperatorId(operatorId);
-    return CommonResult.success(applicationService.create(request));
-}
-```
-
-### 常用验证注解
+### 常用验证注解（快速参考）
 
 | 注解 | 用途 | 示例 |
 |------|------|------|
@@ -89,39 +78,7 @@ public CommonResult<Void> update(
 
 ## 内部 Controller 验证
 
-### 手动验证方法
-
-```java
-@RestController
-@RequestMapping("/inner/api/v1/{path}")
-@RequiredArgsConstructor
-public class {Name}InnerController {
-
-    @PostMapping("/create")
-    public CommonResult<Long> create(@RequestBody {Name}CreateApiRequest request) {
-        validateCreateRequest(request);  // 手动验证
-        Long id = manageService.create(request);
-        return CommonResult.success(id);
-    }
-
-    // 验证方法
-    private void validateCreateRequest({Name}CreateApiRequest request) {
-        if (request == null) {
-            throw new BusinessException("请求不能为空");
-        }
-        if (StringUtils.isBlank(request.getName())) {
-            throw new BusinessException("名称不能为空");
-        }
-        if (request.getOperatorId() == null) {
-            throw new BusinessException("操作人ID不能为空");
-        }
-        // 业务规则验证
-        if (request.getSortOrder() != null && request.getSortOrder() < 0) {
-            throw new BusinessException("排序值不能为负数");
-        }
-    }
-}
-```
+> 手动 `validateXxx()` 方法的完整示例详见 `02-inner-service.md §2`
 
 ### 验证规则清单
 
@@ -152,6 +109,8 @@ public class {Name}InnerController {
 ---
 
 ## ApplicationService 验证
+
+> 远程调用结果验证（`CommonResult.isSuccess()` 判断、错误透传）详见 `00-common-constraints.md §2`
 
 ### 业务规则验证
 
@@ -189,26 +148,6 @@ public class {Name}ApplicationServiceImpl implements {Name}ApplicationService {
 }
 ```
 
-### 远程调用结果验证
-
-```java
-@Override
-public {Name}Response getDetail(Long id) {
-    CommonResult<{Name}ApiResponse> result = remoteService.getDetail(id);
-    
-    // 验证调用结果
-    if (!result.isSuccess()) {
-        // 远端业务失败，透传错误
-        return CommonResult.failed(result.getCode(), result.getMessage());
-    }
-    
-    if (result.getData() == null) {
-        throw new BusinessException("记录不存在");
-    }
-    
-    return convertToResponse(result.getData());
-}
-```
 
 ---
 

@@ -4,12 +4,16 @@
 生成应用服务层的完整代码，包括 InnerController、ApplicationService、QueryService、ManageService、Mapper。
 
 ## 输入
-- `feature_definition`: Feature 定义
-- `validated_plan`: 验证后的生成计划
-- `feign_interfaces`: Feign 接口定义
+- `tech_spec`: 技术规格书
+- `generation_plan`: 代码生成计划
+- `feign_interfaces`: Feign 接口定义（由 `generate_feign_interfaces` 步骤产出）
+- `database_schema`: 建表 SQL 文件（由 `generate_database` 步骤产出）
+- `entity_classes`: Entity/DO 类文件（由 `generate_database` 步骤产出，**本步骤直接复用，不重新生成**）
+
+> **重要**：`entity_classes` 由上游 `generate_database` 步骤已生成，本步骤**直接引用**，不得重新生成 DO 类。
 
 ## 输出
-- `application_layer_code`: 应用服务层代码集合
+- `application_layer_code`: 应用服务层代码集合（不含 Entity/DO 类）
 
 ## 生成规范
 
@@ -156,24 +160,33 @@ public class {Name}ApplicationServiceImpl implements {Name}ApplicationService {
 
 ## 生成步骤
 
-1. **生成 Entity/DO**
-   - 根据数据库表结构生成
-   - 添加 MyBatis-Plus 注解
+> **前置检查**：执行本步骤前，确认以下上游产物已存在：
+> - `outputs/data/sql/{table_name}.sql`（建表 SQL + 测试数据）
+> - `{app-service}/domain/entity/Aim{Name}DO.java`（Entity/DO 类）
+> 若上述文件不存在，**停止执行**，先完成 `generate_database` 步骤。
+
+1. **复用 Entity/DO**（不重新生成）
+   - 确认 `generate_database` 步骤已生成 `Aim{Name}DO.java`
+   - 读取 DO 类结构，作为后续 Mapper/Service 生成的依据
 
 2. **生成 Mapper 接口和 XML**
    - 基础 CRUD 继承 BaseMapper
    - 自定义查询在 XML 中实现
 
-3. **生成 QueryService/ManageService**
+3. **生成 MP Service 接口和实现**（`Aim{Name}Service` / `Aim{Name}ServiceImpl`）
+   - 放在 `service/mp/` 和 `service/impl/mp/` 目录
+   - `Aim{Name}ServiceImpl` **禁止标注 `@Transactional`**
+
+4. **生成 QueryService/ManageService**
    - 接口与实现分离
    - 封装数据访问逻辑
 
-4. **生成 ApplicationService**
+5. **生成 ApplicationService**
    - 业务编排逻辑
    - DTO 转换方法
    - 模块内关联字段填充
 
-5. **生成 InnerController**
+6. **生成 InnerController**
    - 实现 Feign 接口对应的方法
    - 手动参数校验
    - 调用 ApplicationService
@@ -181,29 +194,35 @@ public class {Name}ApplicationServiceImpl implements {Name}ApplicationService {
 ## 输出文件结构
 
 ```
-{app-service}/
+repos/{app-service}/src/main/java/{package}/
 ├── controller/
 │   └── inner/
 │       └── {Name}InnerController.java
 ├── service/
 │   ├── {Name}ApplicationService.java
-│   ├── {Name}ApplicationServiceImpl.java
+│   ├── impl/
+│   │   └── {Name}ApplicationServiceImpl.java
 │   ├── {Name}QueryService.java
-│   ├── {Name}QueryServiceImpl.java
+│   ├── impl/
+│   │   └── {Name}QueryServiceImpl.java
 │   ├── {Name}ManageService.java
-│   └── {Name}ManageServiceImpl.java
-├── domain/
-│   └── entity/
-│       └── Aim{Name}DO.java
+│   ├── impl/
+│   │   └── {Name}ManageServiceImpl.java
+│   ├── mp/
+│   │   └── Aim{Name}Service.java
+│   └── impl/mp/
+│       └── Aim{Name}ServiceImpl.java
+├── domain/entity/
+│   └── Aim{Name}DO.java              ← 由 generate_database 步骤生成，本步骤不修改
 └── mapper/
-    ├── {Name}Mapper.java
-    └── xml/
-        └── {Name}Mapper.xml
+    ├── Aim{Name}Mapper.java
+    └── resources/mapper/
+        └── Aim{Name}Mapper.xml
 ```
 
 ## 依赖检查
 
-生成前必须检查：
-1. Feign 接口是否已生成（ApiRequest/ApiResponse）
-2. 数据库表是否存在
+生成前必须确认：
+1. `generate_database` 步骤已完成，`Aim{Name}DO.java` 文件已存在
+2. Feign 接口已生成（ApiRequest/ApiResponse 已存在）
 3. 依赖的其他服务接口是否可用

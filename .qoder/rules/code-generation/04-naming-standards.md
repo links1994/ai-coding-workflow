@@ -96,29 +96,7 @@ globs: [ "**/*.java" ]
 
 ---
 
-## 7. 跨层 DTO 透传与防腐层设计
-
-### 7.1 DTO 透传（Passthrough）模式
-
-**适用场景**：应用服务对查询结果**无任何内容增删改**，仅做请求转发
-
-**做法**：
-- Feign 接口直接引用 Provider 域的 `{Name}ApiResponse`
-- 应用服务不新建内容相同的同名类
-- 应用层实现中直接返回，无需转换
-
-### 7.2 门面防腐（Anti-Corruption）模式
-
-**适用场景**：门面服务面向**前端/用户**的响应对象
-
-**做法**：
-- 门面层 Controller 返回类型必须是**门面层自定义的 `{Name}Response`**
-- 门面层 ApplicationService 负责将 `{Name}ApiResponse` 转换为 `{Name}Response`
-- 即使字段完全相同，该转换也**不得省略**
-
-**理由**：
-- 前端契约稳定性：内部 API 进化不会直接影响前端
-- 字段语义自主：门面层可对字段进行重命名、格式化、展开等加工
+> **DTO 透传（Passthrough）模式与门面防腐（Anti-Corruption Layer）详见 `02-inner-service.md §4`**
 
 ---
 

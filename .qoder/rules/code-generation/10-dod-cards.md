@@ -30,10 +30,10 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 **参数与响应**：
 - [ ] 请求入参使用 `{Name}Request`（以 `Request` 结尾）
 - [ ] 响应出参使用 `{Name}Response` 或 `{Name}VO`（门面层自定义，**禁止**直接暴露 `{Name}ApiResponse` 给前端）
-- [ ] POST/PUT/DELETE 方法使用 `@RequestBody`；GET 多参数使用 `@RequestParam`
+- [ ] POST/PUT/DELETE 方法：业务参数（排除 `@RequestHeader`、`pageNum`/`pageSize` 等常规参数）**> 2 个**时封装为 `@RequestBody`，≤ 2 个业务参数可用 `@RequestParam`；GET 多参数使用 `@RequestParam`
 - [ ] 写操作（POST/PUT/DELETE）使用 `@Valid` + `jakarta.validation` 注解校验
 - [ ] `{Name}Response` / `{Name}VO` 中的 `LocalDateTime` 字段必须标注 `@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")`
-- [ ] `{Name}Request` 实现 `Serializable`，`serialVersionUID = -1L`
+- [ ] `{Name}Request` 实现 `Serializable`，并声明 `@Serial private static final long serialVersionUID = -1L;`
 
 **路径规范**：
 - [ ] 路径前缀符合服务规范：`/admin/api/v1/`（管理端）、`/merchant/api/v1/`（商家端）、`/app/api/v1/`（APP端）
@@ -55,7 +55,8 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 - [ ] `@Operation(summary = "...")` 说明清晰，描述实际业务含义
 - [ ] String 参数由 `ApplicationService` 层统一去空格（Controller 层不做 trim）
 - [ ] 分页响应 `data` 使用 `CommonResult.PageData<{Name}Response>`（`totalCount` + `items` 字段名）
-- [ ] `serialVersionUID` 统一设置为 `-1L`
+- [ ] `serialVersionUID` 统一设置为 `-1L`，且必须标注 `@Serial` 注解
+- [ ] 使用 `new CommonResult.PageData<>(totalCount, items)` 构造时**参数顺序必须为 `totalCount` 在前、`items` 在后**；空分页结果使用 `new CommonResult.PageData<>(0L, Collections.emptyList())`，**禁止**省略任一参数
 
 ---
 
@@ -79,7 +80,7 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 - [ ] **禁止**使用 `@PathVariable` 路径参数
 - [ ] HTTP 方法仅使用 GET / POST，**禁止** PUT / DELETE
 - [ ] 所有写操作的 `{Name}ApiRequest` 包含 `operatorId` 字段（Long 类型）
-- [ ] `{Name}ApiResponse` 实现 `Serializable`，`serialVersionUID = -1L`
+- [ ] `{Name}ApiResponse` 实现 `Serializable`，并声明 `@Serial private static final long serialVersionUID = -1L;`
 - [ ] `{Name}ApiResponse` 中的 `LocalDateTime` 字段标注 `@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")`
 
 **路径与校验**：
@@ -101,6 +102,7 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 - [ ] `@Operation(summary = "...")` 说明清晰
 - [ ] Feign 接口（`{Name}RemoteService`）与 Controller 方法签名保持一致
 - [ ] 分页响应使用 `CommonResult.PageData<{Name}ApiResponse>`（`totalCount` + `items` 字段名）
+- [ ] 使用 `new CommonResult.PageData<>(totalCount, items)` 构造时**参数顺序必须为 `totalCount` 在前、`items` 在后**；空分页结果使用 `new CommonResult.PageData<>(0L, Collections.emptyList())`，**禁止**省略任一参数
 
 ---
 
@@ -146,6 +148,7 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 - [ ] XML Mapper 中使用 `<sql id="Base_Column_List">` 定义可复用字段片段
 - [ ] 禁止在 `@Select`、`@Insert` 等注解中编写复杂 SQL（仅限极简单单表操作）
 - [ ] 查询方法命名语义清晰：`getBy{Name}`（单条）、`listBy{Name}`（列表）、`pageBy{Name}`（分页）
+- [ ] 提供关联名称批量查询方法（如 `buildNameMap(List<Long> ids)`），供上层 ApplicationService 防 N+1 填充使用
 
 ---
 
@@ -214,6 +217,8 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 - [ ] 表名格式：`aim_{模块}_{业务名}`（全小写，下划线分隔）
 - [ ] 字符集：`DEFAULT CHARSET=utf8mb4`，**禁止**指定 COLLATE
 - [ ] 基础通用字段完整：`id`、`create_time`、`update_time`（`creator_id`、`updater_id` 可选）
+- [ ] `create_time` 字段定义必须为：`DATETIME DEFAULT CURRENT_TIMESTAMP`
+- [ ] `update_time` 字段定义必须为：`DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`
 - [ ] 删除字段按策略决策选择，非所有表强制要求 `is_deleted`
 
 **Mapper 命名**：
@@ -286,14 +291,22 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 - [ ] 不涉及写操作的方法不标注 `@Transactional`
 - [ ] 涉及多个写操作的方法标注 `@Transactional(rollbackFor = Exception.class)`
 
-**远程调用处理**：
+**远程调用处理**（详见 `00-common-constraints.md §2`）：
 - [ ] 调用 Feign 接口后必须校验 `CommonResult.isSuccess()`
-- [ ] 远端业务失败使用 `CommonResult.failed(code, message)` 透传，**禁止**包装为 `BusinessException`
+- [ ] 远端业务失败使用 `CommonResult.failed(result.getCode(), result.getMessage())` 透传，**禁止**包装为 `BusinessException`
+- [ ] **涉及远端失败透传的方法，返回类型必须为 `CommonResult<T>`**，**禁止**将远端失败状态降维为 `boolean`、`String` 等基础类型返回（会丢失错误码语义）
 - [ ] 远程通信异常（网络超时等）抛出 `RemoteApiCallException`
+- [ ] `CommonResult.failed()` 错误码参数位**禁止**使用魔法数字或字符串（如 `"500"`、`"400"`、`400L`），必须使用枚举或透传 `result.getCode()`
 
 **参数转换**：
 - [ ] 门面层 ApplicationService 负责将 `{Name}ApiResponse` 转换为 `{Name}Response`
 - [ ] 即使字段完全相同，转换也**不得省略**
+
+**模块内关联字段就近填充**（仅限应用服务层 ApplicationService，门面层 `Response`/`VO` 关联字段结构不受此项约束）：
+- [ ] **模块内关联**（引用 id 所属表与当前表在**同一服务**内）：`ApiResponse` 必须内嵌 `{Name}RefResponse` 关联引用对象（至少含 `id` + `name`），**禁止**将 `{Name}Id`、`{Name}Name` 直接平铺在 `ApiResponse` 中
+- [ ] `{Name}RefResponse` **必须用引用对象来填充**：由 `ApplicationService.convertToApiResponse()` 通过 QueryService 返回的实体/DO 对象属性访问取值，**禁止**硬编码或字符串拼接
+- [ ] 分页/列表场景中关联内嵌对象填充**禁止 N+1**：必须先批量查询所有关联 id 对应的 DO，构建 `Map<Long, DO>` 后统一填充，**禁止**在循环内单条查询
+- [ ] **跨模块关联**（引用 id 所属表在另一个服务内）：`ApiResponse` 只声明 `{Name}Id` 字段，不声明任何关联对象字段，名称由门面层 ApplicationService 通过 Feign 调用聚合
 
 ### 7.2 命名规则
 
@@ -342,6 +355,8 @@ globs: [ "**/*.java", "**/*.xml", "**/*.sql" ]
 - [ ] 表名格式：`aim_{模块}_{业务名}`（全小写，下划线分隔）
 - [ ] 字符集：`DEFAULT CHARSET=utf8mb4`，**禁止**指定 COLLATE
 - [ ] 包含基础通用字段：`id`、`create_time`、`update_time`
+- [ ] `create_time` 字段定义必须为：`DATETIME DEFAULT CURRENT_TIMESTAMP`
+- [ ] `update_time` 字段定义必须为：`DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`
 - [ ] 主键：`id BIGINT PRIMARY KEY AUTO_INCREMENT`
 - [ ] 删除字段按策略选择，非所有表强制要求 `is_deleted`
 

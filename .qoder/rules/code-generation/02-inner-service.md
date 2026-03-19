@@ -27,7 +27,7 @@ Controller（inner，供 Feign 调用）
            Aim{Name}Mapper（原生 MyBatis，所有查询走 XML）
 ```
 
-> 目录结构、MyBatis-Plus 使用限制及对象命名约束详见 `.qoder/rules/tech-coding-standards.md`
+> 目录结构、MyBatis-Plus 使用限制及对象命名约束详见 `09-directory-structure.md`
 
 ### 1.2 服务边界隔离原则
 
@@ -75,76 +75,109 @@ Controller（inner，供 Feign 调用）
 
 ---
 
-## 3. 模块内关联字段就近填充原则
+## 3. 模块内关联字段填充原则
 
-**背景**：当一个模块内的业务对象（如 `ScriptTemplate`）引用了**同模块内另一张表**的主键（如 `{name}Id`），调用方往往还需要对应的名称（`{name}Name`）来展示。若 `ApiResponse` 只返回 id，门面层就不得不额外发起一次 Feign 调用来获取 id→name 映射，造成不必要的跨服务往返。
+> **适用范围**：仅约束**应用服务层**的 `ApiResponse`。门面服务层的 `Response`/`VO` 中关联字段结构不受此规则限制，可采用平铺字段或嵌套对象两种形式，由门面层自行决策。
+
+**背景**：当一个模块内的业务对象引用了**同模块内另一张表**的主键（`{Name}Id`），调用方往往还需要对应的名称用于展示。若 `ApiResponse` 只返回 id，门面层就必须额外发起 Feign 调用获取 id→name 映射，造成不必要的跨服务往返。
 
 **核心规则**：
 
-- **模块内关联**（引用 id 所属表与当前表在**同一服务**内）：`ApiResponse` 必须同时返回 `id` 和对应的 `name`（即 `{Name}Id` + `{Name}Name`），由**当前模块的 ApplicationService 层**负责在构建 ApiResponse 时就近填充
-- **跨模块关联**（引用 id 所属表在**另一个服务**内）：`ApiResponse` 仅返回 `id`；门面服务需要名称时，在门面层 ApplicationService 中通过 Feign 调用对方服务获取并组装
+- **模块内关联**（引用 id 所属表与当前表在**同一服务**内）：`ApiResponse` 必须内嵌 `{Name}RefResponse` 关联引用对象（至少含 `id` + `name` 字段），**禁止**将关联字段平铺在 `ApiResponse` 中；由**当前模块的 ApplicationService 层**负责在 `convertToApiResponse()` 中构建并填充该嵌套对象，**必须用引用对象来填充**（通过 QueryService 返回的实体/DO 对象属性访问取值），**禁止**硬编码或字符串拼接
+- **跨模块关联**（引用 id 所属表在**另一个服务**内）：`ApiResponse` 仅声明 `{Name}Id` 字段，不声明 `{Name}Name` 及关联对象；门面服务需要名称时，在门面层 ApplicationService 中通过 Feign 调用对方服务获取，返回结构（平铺或嵌套）由门面层自行决定
+
+**`{Name}RefResponse` 设计规范**：
+
+```java
+// 关联引用对象（位于 mall-inner-api 对应模块的 dto/response/ 下）
+@Data
+public class {Name}RefResponse implements Serializable {
+    @Serial
+    private static final long serialVersionUID = -1L;
+
+    /** 关联对象ID */
+    private Long id;
+
+    /** 关联对象名称 */
+    private String name;
+
+    // 可根据业务需要扩展其他必要字段（如 code、no 等）
+}
+```
 
 **决策树**：
 
 ```
-需要在列表/详情中展示名称字段？
+需要在列表/详情中展示关联对象信息？
     ↓
 该 id 关联的表是否在当前服务模块内？
-    ├─ 是（模块内关联）→ 在本模块 ApplicationService 的 convertToApiResponse() 中就近填充 {Name}Name
-    │                   ApiResponse 同时包含 {Name}Id + {Name}Name
-    └─ 否（跨模块关联）→ ApiResponse 只返回 {Name}Id
-                        门面层 ApplicationService 发起 Feign 调用填充名称
+    ├─ 是（模块内关联）→ ApiResponse 内嵌 {Name}RefResponse
+    │                   ApplicationService.convertToApiResponse() 通过引用对象就近填充
+    │                   （QueryService 返回的 DO 对象属性访问，禁止硬编码）
+    └─ 否（跨模块关联）→ ApiResponse 只声明 {Name}Id
+                        门面层 ApplicationService 发起 Feign 调用填充，结构由门面层决定
 ```
 
-**示例**（话术模板 & {业务实体}，同属 {app-service}）：
+**示例**（话术与员工，同属应用服务）：
 
 ```java
-// ✅ 正确：ScriptTemplateApplicationServiceImpl 就近填充 {name}Name
-private ScriptTemplateApiResponse convertToApiResponse(AimScriptTemplateDO entity) {
-    ScriptTemplateApiResponse response = new ScriptTemplateApiResponse();
-    response.set{Name}Id(entity.get{Name}Id());
-    // 就近填充：同模块内 {Name}QueryService 直接可用
-    Aim{Name}DO {name} = {name}QueryService.getById(entity.get{Name}Id());
-    response.set{Name}Name({name} != null ? {name}.getName() : null);
+// ✅ 正确：模块内关联，内嵌 EmployeeRefResponse
+public class EmployeeScriptApiResponse implements Serializable {
+    private Long id;
+    private EmployeeRefResponse employee;  // 内嵌关联引用对象
+    private String name;
+    // ... 其他字段
+}
+
+// ApplicationService 就近填充
+private EmployeeScriptApiResponse convertToApiResponse(AimAgentEmployeeScriptDO entity) {
+    EmployeeScriptApiResponse response = new EmployeeScriptApiResponse();
+    // 通过 DO 引用对象的属性访问构建嵌套对象
+    EmployeeRefResponse employeeRef = new EmployeeRefResponse();
+    employeeRef.setId(entity.getEmployeeId());
+    employeeRef.setName(entity.getEmployeeName());  // 来自 JOIN 查询写入 DO 的属性
+    response.setEmployee(employeeRef);
     // ... 其他字段
     return response;
 }
 
-// ❌ 错误：ApiResponse 只返回 {name}Id，迫使门面层额外调一次 Feign 获取名称映射
-private ScriptTemplateApiResponse convertToApiResponse(AimScriptTemplateDO entity) {
-    ScriptTemplateApiResponse response = new ScriptTemplateApiResponse();
-    response.set{Name}Id(entity.get{Name}Id());
-    // 缺少 {name}Name → 门面层被迫发起额外 Feign 调用
-    return response;
+// ❌ 错误：关联字段平铺在 ApiResponse 中（违反模块内关联内嵌规则）
+public class EmployeeScriptApiResponse implements Serializable {
+    private Long employeeId;    // ❌ 应内嵌 EmployeeRefResponse
+    private String employeeName; // ❌ 应内嵌 EmployeeRefResponse
+}
+
+// ❌ 错误：ApiResponse 只返回 id，迫使门面层额外调 Feign
+public class EmployeeScriptApiResponse implements Serializable {
+    private Long employeeId;  // ❌ 模块内关联必须内嵌 RefResponse
 }
 ```
 
 **对 ApiResponse 设计的约束**：
 
-- 若业务对象持有模块内关联 id（`{Name}Id`），`ApiResponse` 必须同时声明 `{Name}Name` 字段
-- 若业务对象持有跨模块关联 id，`ApiResponse` 只声明 `{Name}Id` 字段，不声明 `{Name}Name`（名称由门面层聚合）
+- 模块内关联：声明 `{Name}RefResponse {name}` 嵌套字段，**禁止**将 `{Name}Id`、`{Name}Name` 直接平铺
+- 跨模块关联：只声明 `{Name}Id` 字段，不声明任何关联对象字段（名称由门面层聚合）
 
 **分页场景优化**（N+1 问题预防）：
 
 - 分页查询时禁止在循环内逐条查询关联名称（N+1）
-- 应先将当前页所有关联 id 去重后**批量查询**，构建 `id → name` 的 Map，再统一填充到各 `ApiResponse`
-- 若关联表数据量小且相对稳定（如{业务实体}），可将全量列表缓存在 Map 中一次性填充
+- 应先将当前页所有关联 id 去重后**批量查询**，构建 `id → DO` 的 Map，再统一填充到各 `ApiResponse`
+- 若关联表数据量小且相对稳定，可将全量列表缓存在 Map 中一次性填充
 
 ```java
-// ✅ 正确：批量构建 Map，一次性填充
-List<Long> {name}Ids = entities.stream().map(AimScriptTemplateDO::get{Name}Id)
+// ✅ 正确：批量构建 Map，一次性填充嵌套对象
+List<Long> employeeIds = entities.stream().map(AimAgentEmployeeScriptDO::getEmployeeId)
         .filter(Objects::nonNull).distinct().collect(Collectors.toList());
-// {name}QueryService 提供批量查询或全量查询方法
-Map<Long, String> {name}NameMap = {name}QueryService.buildNameMap({name}Ids);
+Map<Long, AimAgentEmployeeDO> employeeMap = employeeQueryService.buildMap(employeeIds);
 
-List<ScriptTemplateApiResponse> items = entities.stream()
-        .map(entity -> convertToApiResponse(entity, {name}NameMap))
+List<EmployeeScriptApiResponse> items = entities.stream()
+        .map(entity -> convertToApiResponse(entity, employeeMap))
         .collect(Collectors.toList());
 
 // ❌ 错误：在循环内单条查询（N+1）
-List<ScriptTemplateApiResponse> items = entities.stream()
+List<EmployeeScriptApiResponse> items = entities.stream()
         .map(entity -> {
-            Aim{Name}DO {name} = {name}QueryService.getById(entity.get{Name}Id()); // N+1！
+            AimAgentEmployeeDO employee = employeeQueryService.getById(entity.getEmployeeId()); // N+1！
             // ...
         }).collect(Collectors.toList());
 ```

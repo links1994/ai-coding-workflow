@@ -1,18 +1,22 @@
 # Step: 生成数据库结构
 
 ## 目的
-根据 tech-spec 中的数据模型定义，生成数据库表结构和实体类。
+根据 tech-spec 中的数据模型定义，生成**建表 SQL**、**测试数据 SQL** 和 **Entity/DO 类**。
+
+> **重要**：本步骤是数据库结构和 Entity 类的**唯一生成来源**。
+> - SQL 文件和 Entity/DO 类必须在本步骤中**实际写入磁盘**。
+> - 后续 `generate_application_layer` 步骤**直接引用**本步骤的产物，不会重复生成。
 
 ## 输入
 - `tech_spec`: 技术规格书（包含数据模型章节）
 - `generation_plan`: 代码生成计划
 
-## 输出
-- `database_schema`: 数据库表结构定义
-- `entity_classes`: Entity/DO 类文件
-- `test_data_sql`: 测试数据 SQL
+## 输出（必须全部完成）
+- `database_schema`: 建表 SQL 文件（`outputs/data/sql/{table_name}.sql`）
+- `entity_classes`: Entity/DO 类文件（`{app-service}/domain/entity/Aim{Name}DO.java`）
+- `test_data_sql`: 测试数据 SQL（内嵌在建表 SQL 文件末尾）
 
-## 执行步骤
+## 执行步骤（必须按顺序完成，每步均需实际写入文件）
 
 ### 1. 解析数据模型
 
@@ -22,7 +26,7 @@
 - 索引定义
 - 表关联关系
 
-### 2. 生成建表 SQL
+### 2. 生成建表 SQL（必须写入文件：`outputs/data/sql/{table_name}.sql`）
 
 **命名规范**：`{table_name}.sql`
 
@@ -46,7 +50,24 @@ CREATE TABLE IF NOT EXISTS `{table_name}` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='{Name}表';
 ```
 
-### 3. 生成 Entity/DO 类
+### 3. 生成测试数据 SQL（追加到建表 SQL 文件末尾）
+
+每个表至少生成 3 条测试数据：
+- 正常数据
+- 边界数据
+- 特殊场景数据
+
+```sql
+-- 测试数据
+INSERT INTO `{table_name}` (`name`, `description`, `sort_order`, `status`) VALUES
+('测试数据1', '描述1', 1, 1),
+('测试数据2', '描述2', 2, 1),
+('测试数据3', '描述3', 3, 1);
+```
+
+> **说明**：测试数据 SQL 追加在建表 SQL 文件末尾，统一写入 `outputs/data/sql/{table_name}.sql`。
+
+### 4. 生成 Entity/DO 类（必须写入文件：`{app-service}/domain/entity/Aim{Name}DO.java`）
 
 **命名规范**：`Aim{Name}DO`
 
@@ -82,44 +103,43 @@ public class Aim{Name}DO extends BaseDO {
 }
 ```
 
-### 4. 生成测试数据
 
-每个表至少生成 3 条测试数据：
-- 正常数据
-- 边界数据
-- 特殊场景数据
 
-```sql
--- 测试数据
-INSERT INTO `{table_name}` (`name`, `description`, `sort_order`, `status`) VALUES
-('测试数据1', '描述1', 1, 1),
-('测试数据2', '描述2', 2, 1),
-('测试数据3', '描述3', 3, 1);
-```
-
-## 输出文件
+## 输出文件（本步骤必须生成以下所有文件）
 
 ```
 outputs/
-├── data/
-│   └── sql/
-│       └── {table_name}.sql
-└── generated/
-    └── {app-service}/
-        └── domain/
-            └── entity/
-                └── Aim{Name}DO.java
+└── data/
+    └── sql/
+        └── {table_name}.sql          ← 建表 SQL + 测试数据 SQL
+
+repos/{app-service}/src/main/java/{package}/domain/entity/
+└── Aim{Name}DO.java                  ← Entity/DO 类
 ```
+
+> **检查点**：本步骤结束后，上述文件必须已实际写入磁盘，否则视为步骤未完成。
 
 ## 约束检查
 
+**SQL 文件**：
+- [ ] SQL 文件已写入 `outputs/data/sql/{table_name}.sql`
+- [ ] 包含 `DROP TABLE IF EXISTS` 语句
+- [ ] 包含 `CREATE TABLE IF NOT EXISTS` 语句
 - [ ] 表名符合 `aim_{模块}_{业务名}` 规范
-- [ ] 包含基础字段：id, create_time, update_time
-- [ ] 字符集为 utf8mb4
-- [ ] 所有字段有注释
-- [ ] 外键字段有索引
-- [ ] DO 类继承 BaseDO
-- [ ] DO 类名以 Aim 开头，以 DO 结尾
+- [ ] 字符集为 `utf8mb4`，**不指定 COLLATE**
+- [ ] 包含基础字段：`id`、`create_time`、`update_time`
+- [ ] 所有字段有 `COMMENT`
+- [ ] 外键字段已建索引
+- [ ] 至少包含 3 条测试数据 INSERT 语句
+
+**Entity/DO 文件**：
+- [ ] DO 类文件已写入对应服务的 `domain/entity/` 目录
+- [ ] DO 类名以 `Aim` 开头，以 `DO` 结尾
+- [ ] 继承 `BaseDO`
+- [ ] 有 `@TableName("{table_name}")` 注解
+- [ ] `status` 字段存在时使用 `StatusEnum`，**禁止**魔法数字
+- [ ] **禁止**在 DO 类上标注 `@JsonFormat`
+- [ ] **禁止**在对应的 `Aim{Name}ServiceImpl` 上标注 `@Transactional`
 
 ## 错误处理
 

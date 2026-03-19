@@ -1,0 +1,16 @@
+# 产物路径索引
+# 
+# 记录 execute/review 阶段各步骤生成的文件路径。
+# 每个步骤完成后将实际路径追加到对应 key，供后续步骤按路径从磁盘读取。
+# STATUS.yml 只记录流程状态，不记录路径。
+
+execute:
+  database_schema: ""           # outputs/schemal/{table_name}.sql
+  entity_classes_path: ""       # repos/{app-service}/.../domain/entity/
+  feign_interfaces_path: ""     # repos/mall-inner-api/mall-agent-api/src/main/java/
+  application_layer_path: ""    # repos/{app-service}/src/main/java/
+  facade_layer_path: ""         # repos/{facade-service}/src/main/java/
+  test_files_path: ""           # outputs/data/http/{module}-api.http
+
+review:
+  swagger_docs: []              # outputs/swagger/{service}/{中文功能}-{ControllerName}Api.md

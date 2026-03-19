@@ -23,6 +23,7 @@ description: 根据技术规格书（tech-spec.md）生成符合项目规范的 
 
 | 文件 | 路径 | 说明 |
 |------|------|------|
+| 通用约束 | `.qoder/rules/code-generation/00-common-constraints.md` | 跨层通用约束：异常/CommonResult/远端透传/operatorId/日志 |
 | 门面服务规范 | `.qoder/rules/code-generation/01-facade-service.md` | Controller、ApplicationService、DTO 规范 |
 | 应用服务规范 | `.qoder/rules/code-generation/02-inner-service.md` | InnerController、Query/ManageService 规范 |
 | Feign 接口规范 | `.qoder/rules/code-generation/03-feign-interface.md` | RemoteService、ApiRequest/ApiResponse 规范 |
