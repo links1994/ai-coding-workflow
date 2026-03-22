@@ -23,6 +23,21 @@ environments:
         url: http://192.168.110.101:9201
         health: /actuator/health
 
+  dev:
+    desc: dev 测试环境（经网关访问）
+    gateway:
+      url: https://course-dev.aimkeji.com   # TODO: 替换为真实 dev 网关 IP
+    nacos:
+      server_addr: http://192.168.0.30:8848   # TODO: 替换为真实 dev Nacos 地址
+      namespace: ""
+      username: nacos
+      password: nacos
+    http_files:
+      note: |
+        dev 环境 HTTP 文件（*-api.dev.http）使用 gateway.url 作为 baseUrl，
+        每个请求携带 Authorization: Bearer {{token}}，
+        URL 携带 Context Path（/{service-name}/）。
+
 
 repos:
   mall-admin:

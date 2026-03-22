@@ -1,375 +1,145 @@
 workflow:
   name: req-clarification
-  description: 需求澄清流程 - 将模糊不明确的需求通过结构化访谈转化为可落地的 Feature 方案，对接后续 feature-implementation 流程
-  version: 1.0.0
+  description: 需求澄清流程 - 将模糊不明确的需求通过结构化访谈转化为单一 Feature 的需求规格文档，对接后续 feature-implementation 流程
+  version: 2.1.0
   type: analysis
 
-  # 六阶段生命周期配置
+  # 设计原则
+  # - 一次需求澄清 = 一个 Program = 一份 requirement-spec.md = 一个 Feature
+  # - 复杂性通过增加步骤数量解决，不拆分为多个 Feature 或多个 Program
+  # - 输出的 requirement-spec.md 直接作为 feature-implementation 的唯一输入
+
+  # 六阶段生命周期
   lifecycle:
     research:
       enabled: true
-      description: 收集原始需求描述，理解业务背景，识别模糊点
+      description: 加载原始需求和架构上下文，识别模糊点
       steps:
         - id: load_raw_requirement
           name: 加载原始需求
           action: load_feature
           inputs: [raw_requirement]
           outputs: [raw_requirement_context]
-          description: |
-            加载用户提供的原始需求描述（可以是一段话、草稿、口述记录、截图文字等）。
-            接受任何形式的模糊输入，不做预处理。
+          spec: steps/research/01-load-raw-requirement.md
 
-        - id: load_architecture_context
+        - id: load_architecture
           name: 加载架构上下文
           action: load_rules
-          inputs: [architecture_rules, service_layering_rules]
+          inputs: [architecture_rules]
           outputs: [architecture_constraints]
-          description: |
-            加载服务分层规范，了解现有系统架构，
-            为后续确定需求落地到哪些服务提供约束基础。
+          spec: steps/research/02-load-architecture.md
 
-        - id: analyze_raw_requirement
-          name: 分析原始需求
+        - id: analyze_ambiguity
+          name: 分析需求模糊点
           action: analyze_context
           inputs: [raw_requirement_context, architecture_constraints]
           outputs: [requirement_analysis]
-          description: |
-            对原始需求进行初步分析，识别：
-            1. 已明确的内容（角色、场景、目标）
-            2. 模糊不清的内容（缺少细节、有歧义、假设未说明）
-            3. 缺失的内容（必要信息但未提及）
-            4. 潜在的技术约束或冲突
-            
-            输出结构化分析报告，为 decision 阶段的问题清单提供基础。
-
-        - id: load_existing_features
-          name: 加载现有 Feature 上下文
-          action: load_knowledge
-          inputs: [existing_features]
-          outputs: [existing_features_context]
-          description: |
-            扫描 outputs/PROGRAMS/ 已有 Program 和 decomposition 报告，
-            识别是否有相关已实现的功能可复用或需要扩展。
+          spec: steps/research/03-analyze-ambiguity.md
 
     decision:
       enabled: true
-      description: 通过结构化访谈逐步澄清需求，消除歧义，确认业务目标
+      description: 通过结构化访谈逐步澄清需求，核心交互阶段
       steps:
         - id: clarify_business_goal
           name: 澄清业务目标
           action: clarify_business_goal
           inputs: [requirement_analysis]
           outputs: [business_goal_answers]
-          description: |
-            ## 业务目标澄清
-
-            基于原始需求分析，向用户提问以明确业务目标：
-
-            ### 核心问题（必问）
-            1. **这个需求要解决什么问题？** 当前痛点是什么？
-            2. **谁在使用这个功能？** 用户角色（管理员/商家/买家/系统）
-            3. **使用场景是什么？** 典型的操作流程是怎样的？
-            4. **预期的结果是什么？** 用户完成操作后看到/得到什么？
-
-            ### 边界问题（按需提问）
-            - 这个需求是新增功能还是改造现有功能？
-            - 是否有参考的产品（竞品、原型图、设计稿）？
-            - 优先级和紧急程度如何？
-
-            提问完成后询问："关于业务目标，是否还有其他补充？"
           require_confirmation: true
+          spec: steps/decision/01-clarify-business-goal.md
 
         - id: clarify_functional_scope
           name: 澄清功能范围
           action: clarify_functional_scope
           inputs: [requirement_analysis, business_goal_answers]
           outputs: [functional_scope_answers]
-          description: |
-            ## 功能范围澄清
-
-            基于业务目标，进一步细化功能范围：
-
-            ### 功能清单问题
-            1. **需要哪些操作？** 增删改查？还是特定的业务动作（审核、发布、激活等）？
-            2. **管理端需要哪些页面/接口？** 列表页、详情页、编辑页？
-            3. **用户端（APP/小程序）需要哪些功能？** 还是仅后台管理？
-            4. **是否有批量操作需求？** 批量启用/禁用/删除？
-            5. **是否有导入导出需求？**
-
-            ### 查询与过滤
-            - 列表页需要哪些筛选条件？（状态、时间范围、关键词搜索等）
-            - 排序规则是什么？（创建时间、名称、自定义排序？）
-            - 分页需求（每页显示数量）？
-
-            提问完成后询问："关于功能范围，是否还有遗漏的操作或页面？"
           require_confirmation: true
+          spec: steps/decision/02-clarify-functional-scope.md
 
         - id: clarify_data_requirements
           name: 澄清数据需求
           action: clarify_data_requirements
           inputs: [requirement_analysis, functional_scope_answers]
           outputs: [data_requirements_answers]
-          description: |
-            ## 数据需求澄清
-
-            明确需要存储和处理的数据：
-
-            ### 核心数据问题
-            1. **需要记录哪些信息？** 主要属性有哪些？
-            2. **这些数据与现有数据有什么关联？** 关联哪些现有的表或服务？
-            3. **数据的生命周期是什么？** 是否有状态流转（草稿→发布→下线）？
-            4. **是否有唯一性约束？** 哪些字段不能重复？
-            5. **是否有数量限制？** 最多允许多少条记录？
-
-            ### 枚举和状态
-            - 涉及哪些枚举类型？枚举值有哪些？
-            - 状态之间如何流转？哪些操作会触发状态变更？
-
-            提问完成后询问："关于数据需求，是否还有其他字段或约束需要说明？"
           require_confirmation: true
+          spec: steps/decision/03-clarify-data-requirements.md
 
         - id: clarify_business_rules
           name: 澄清业务规则
           action: clarify_business_rules
           inputs: [functional_scope_answers, data_requirements_answers]
           outputs: [business_rules_answers]
-          description: |
-            ## 业务规则澄清
-
-            明确业务约束和校验规则：
-
-            ### 校验规则
-            1. **创建时有哪些必填字段？** 哪些字段有格式/长度限制？
-            2. **更新时有哪些限制？** 某些状态下哪些字段不可修改？
-            3. **删除时有哪些依赖检查？** 被引用时是否允许删除？
-
-            ### 业务约束
-            4. **是否有权限控制？** 不同角色能看到/操作哪些数据？
-            5. **是否有配额限制？** 每个商家/用户最多创建多少？
-            6. **是否需要审核流程？** 提交后是否需要人工审核？
-            7. **是否有通知需求？** 某些操作是否需要发消息通知？
-
-            提问完成后询问："关于业务规则，是否还有其他约束或特殊处理需要说明？"
           require_confirmation: true
+          spec: steps/decision/04-clarify-business-rules.md
 
-        - id: confirm_clarification_complete
+        - id: confirm_clarification
           name: 确认澄清完成
           action: confirm
-          inputs:
-            - business_goal_answers
-            - functional_scope_answers
-            - data_requirements_answers
-            - business_rules_answers
+          inputs: [business_goal_answers, functional_scope_answers, data_requirements_answers, business_rules_answers]
           outputs: [clarification_confirmed]
-          description: |
-            ## 澄清阶段确认
-
-            汇总所有澄清结果，请用户确认：
-
-            ### 已明确的内容
-            - 业务目标：[汇总展示]
-            - 功能范围：[汇总展示]
-            - 数据需求：[汇总展示]
-            - 业务规则：[汇总展示]
-
-            ### 确认清单
-            - [ ] 业务目标清晰，无歧义
-            - [ ] 功能范围已确定，无遗漏
-            - [ ] 核心数据字段已明确
-            - [ ] 关键业务规则已说明
-            - [ ] 无阻塞性未解决问题
-
-            询问："以上信息是否完整准确？是否还有其他需要补充的内容？确认后将生成结构化方案。"
           require_confirmation: true
+          spec: steps/decision/05-confirm-clarification.md
 
     plan:
       enabled: true
-      description: 基于澄清结果生成结构化的需求方案文档
+      description: 基于澄清结果生成单一 Feature 的需求规格文档
       steps:
-        - id: determine_service_scope
-          name: 确定服务范围
-          action: analyze_services
-          inputs:
-            - clarification_confirmed
-            - architecture_constraints
-            - existing_features_context
-          outputs: [service_scope]
-          description: |
-            基于澄清结果，确定需求落地到哪些服务：
-            1. 分析涉及的业务域
-            2. 映射到对应的微服务（facade/application/data 分层）
-            3. 识别跨服务依赖
-            4. 确定是新建功能模块还是扩展现有模块
-
         - id: generate_requirement_spec
-          name: 生成需求规格文档
-          action: delegate_to_agent
-          agent: spec-generator
-          inputs:
-            - business_goal_answers
-            - functional_scope_answers
-            - data_requirements_answers
-            - business_rules_answers
-            - service_scope
-            - architecture_constraints
-          outputs: [requirement_spec_draft]
-          description: |
-            【委托：spec-generator】基于澄清结果生成结构化需求规格文档。
-
-            生成的需求规格文档（requirement-spec.md）包含：
-            1. **需求概述** - 业务目标、用户角色、使用场景
-            2. **功能清单** - 完整的功能点列表（按用户角色分组）
-            3. **接口草案** - 预期需要的接口列表（方法 + 路径 + 描述）
-            4. **数据模型草案** - 需要的表、核心字段、关联关系
-            5. **业务规则汇总** - 校验规则、状态流转、权限控制
-            6. **服务范围** - 涉及的微服务及分层
-            7. **Feature 拆分建议** - 建议拆成哪些 Feature（可独立交付的单元）
-            8. **实现优先级** - 各 Feature 的优先级和依赖关系
+          name: 生成需求文档
+          action: generate_spec
+          inputs: [clarification_confirmed, business_goal_answers, functional_scope_answers, data_requirements_answers, business_rules_answers, architecture_constraints]
+          outputs: [requirement_spec]
+          spec: steps/plan/01-generate-requirement-spec.md
 
         - id: confirm_requirement_spec
-          name: 确认需求规格
+          name: 确认需求文档
           action: confirm
-          inputs: [requirement_spec_draft]
-          outputs: [spec_confirmed, requirement_spec]
-          source_of_truth: true
-          description: |
-            展示生成的需求规格文档，请用户确认：
-            - 功能清单是否完整
-            - 接口草案是否合理
-            - 数据模型草案是否准确
-            - Feature 拆分建议是否合适
-
-            询问："需求规格文档已生成，是否还有需要调整的内容？确认后将进入 Feature 拆分阶段。"
+          inputs: [requirement_spec]
+          outputs: [requirement_spec_confirmed]
           require_confirmation: true
+          source_of_truth: true
+          spec: steps/plan/02-confirm-requirement-spec.md
 
     execute:
       enabled: true
-      description: 基于需求规格生成可供 feature-implementation 使用的 Feature 列表
+      description: 验证需求文档完整性，确保可直接用于 feature-implementation
       steps:
-        - id: generate_feature_list
-          name: 生成 Feature 列表
-          action: delegate_to_agent
-          agent: req-decomposer
-          inputs:
-            - requirement_spec
-            - architecture_constraints
-          outputs: [feature_list]
-          description: |
-            【委托：req-decomposer】基于需求规格文档生成结构化 Feature 列表。
-
-            为每个 Feature 生成：
-            - Feature ID（F-XXX 格式）
-            - Feature 名称
-            - 功能描述
-            - 涉及服务（facade/application/data 层）
-            - 接口列表（概要）
-            - 数据表（新建/变更）
-            - 依赖关系（前置 Feature）
-            - 验收标准
-            - 预估复杂度（简单/中等/复杂）
-
-        - id: confirm_feature_list
-          name: 确认 Feature 列表
-          action: confirm
-          inputs: [feature_list]
-          outputs: [feature_list_confirmed]
-          description: |
-            展示 Feature 列表，请用户确认：
-            - Feature 拆分粒度是否合适
-            - 每个 Feature 的范围是否清晰
-            - 依赖顺序是否正确
-            - 优先级排序是否符合预期
-
-            询问："Feature 列表已生成，是否还有需要调整的拆分方式或优先级？"
-          require_confirmation: true
-
-        - id: generate_decomposition_doc
-          name: 生成拆分文档
-          action: generate_decomposition_report
-          inputs:
-            - requirement_spec
-            - feature_list_confirmed
-          outputs: [decomposition_doc]
-          description: |
-            生成标准格式的拆分文档（decomposition.md），
-            该文档可直接作为 feature-implementation 流程的输入。
-
-            文档格式与 req-decomposition 流程的 decomposition_report 保持一致，
-            确保下游流程无缝对接。
+        - id: validate_completeness
+          name: 验证需求文档完整性
+          action: validate_completeness
+          inputs: [requirement_spec_confirmed]
+          outputs: [completeness_check]
+          spec: steps/execute/01-validate-completeness.md
 
     feedback:
       enabled: true
-      description: 根据用户反馈调整方案
+      description: 整体反馈与最终调整
       steps:
         - id: collect_feedback
-          name: 收集用户反馈
+          name: 整体反馈与调整
           action: confirm
-          inputs: [decomposition_doc]
-          outputs: [user_feedback]
-          description: |
-            展示最终的拆分文档，询问是否还有需要调整的地方。
-            如用户满意，则直接进入 review 阶段。
-
-        - id: apply_adjustments
-          name: 应用调整
-          action: fix_issues
-          inputs: [decomposition_doc, user_feedback]
-          outputs: [adjusted_decomposition_doc]
-          condition: 当用户提出调整意见时
-          description: 根据用户反馈调整拆分方案，更新 decomposition.md
+          inputs: [requirement_spec_confirmed, completeness_check]
+          outputs: [feedback_result]
+          spec: steps/feedback/01-collect-feedback.md
 
     review:
       enabled: true
-      description: 验证方案完整性，输出可执行的开发计划
+      description: 最终确认，输出进入 feature-implementation 的指引
       steps:
         - id: validate_coverage
           name: 验证需求覆盖度
           action: validate_completeness
-          inputs: [decomposition_doc, requirement_spec]
+          inputs: [requirement_spec_confirmed, feedback_result]
           outputs: [coverage_check]
-          description: |
-            验证 decomposition.md 是否覆盖了所有需求规格中的功能点。
-            检查是否有需求点未被任何 Feature 覆盖。
+          spec: steps/review/01-validate-coverage.md
 
-        - id: validate_dependencies
-          name: 验证依赖合理性
-          action: validate_deps
-          inputs: [feature_list_confirmed]
-          outputs: [dependency_check]
-          description: 检查 Feature 依赖关系是否形成循环依赖，依赖顺序是否合理。
-
-        - id: generate_execution_plan
-          name: 生成执行计划
-          action: create_batch_plan
-          inputs: [feature_list_confirmed, dependency_check]
-          outputs: [execution_plan]
-          description: |
-            基于 Feature 依赖关系生成推荐的执行批次计划：
-            - 批次划分（哪些 Feature 可并行，哪些必须串行）
-            - 推荐执行顺序
-            - 每个 Feature 建议对接的流程（feature-implementation）
-
-        - id: confirm_final_plan
-          name: 确认最终方案
+        - id: output_final_plan
+          name: 输出最终方案
           action: confirm
-          inputs: [decomposition_doc, execution_plan, coverage_check]
+          inputs: [requirement_spec_confirmed, coverage_check]
           outputs: [final_plan_confirmed]
-          description: |
-            ## 最终方案确认
-
-            展示完整的输出产物：
-            1. **需求规格文档** (requirement-spec.md) - 澄清结果的结构化记录
-            2. **拆分文档** (decomposition.md) - Feature 定义（可直接用于 feature-implementation）
-            3. **执行计划** - 推荐的批次执行顺序
-
-            ### 下一步提示
-            每个 Feature 可通过以下方式进入实现流程：
-            ```
-            继续 feature-implementation，Feature ID: F-XXX
-            ```
-
-            询问："方案已完成，是否还有其他需要确认的内容？"
           require_confirmation: true
+          spec: steps/review/02-output-final-plan.md
 
   # 输入定义
   inputs:
@@ -378,33 +148,17 @@ workflow:
       required: true
       description: |
         原始需求描述，接受任意形式的模糊输入：
-        - 一段描述性文字
-        - 草稿文档路径
+        - 一段描述性文字（"我想做一个 XXX 功能"）
+        - 草稿文档
         - 口述记录
-        - 用户故事
-        任何形式均可，无格式要求
+        - 功能关键词列表
 
     - name: architecture_rules
       type: rule
       required: true
-      description: 服务分层架构规则，用于确定需求落地的服务范围
+      description: 服务分层架构规则
       path: .qoder/rules/req-decomposition/
       pattern: "02-service-layering.md"
-      auto_load: true
-
-    - name: service_layering_rules
-      type: rule
-      required: false
-      description: 服务分层规范补充
-      path: .qoder/rules/req-decomposition/
-      pattern: "01-feature-definition.md"
-      auto_load: true
-
-    - name: existing_features
-      type: knowledge
-      required: false
-      description: 现有 Feature 和 Program 的上下文，用于识别复用机会
-      path: outputs/PROGRAMS/
       auto_load: true
 
     - name: context
@@ -416,170 +170,43 @@ workflow:
   outputs:
     - name: requirement_spec
       type: file
-      description: 结构化需求规格文档
+      description: 单一 Feature 的需求规格文档（唯一可信源，直接作为 feature-implementation 输入）
       path: workspace/outputs/requirement-spec.md
-      format: markdown
-      sections:
-        - 需求概述
-        - 功能清单
-        - 接口草案
-        - 数据模型草案
-        - 业务规则汇总
-        - 服务范围
-        - Feature 拆分建议
-
-    - name: decomposition_doc
-      type: file
-      description: 标准拆分文档（可直接用于 feature-implementation 流程）
-      path: workspace/outputs/decomposition.md
-      format: markdown
-      compatible_with: req-decomposition  # 与 req-decomposition 输出格式一致
-
-    - name: execution_plan
-      type: file
-      description: 推荐的批次执行计划
-      path: workspace/outputs/execution-plan.md
       format: markdown
 
   # 可信源定义
   source_of_truth:
-    - name: requirement_spec
-      type: markdown
-      location: workspace/outputs/requirement-spec.md
-      description: 澄清结果的唯一可信源，所有下游产物依赖于此
+    name: requirement_spec
+    type: markdown
+    location: workspace/outputs/requirement-spec.md
+    description: |
+      澄清结果的唯一可信源。
+      描述一个完整的 Feature，直接作为 feature-implementation 流程的输入。
+      若 Feature 较复杂，通过增加步骤来实现，而不是拆分为多个 Feature。
 
-    - name: decomposition_doc
-      type: markdown
-      location: workspace/outputs/decomposition.md
-      description: Feature 定义的可信源，直接用于 feature-implementation 流程输入
-
-  # 级联更新规则
-  cascade_rules:
-    - trigger: requirement_spec
-      effects: [decomposition_doc, execution_plan]
-      action: regenerate
-      description: 需求规格变更时，重新生成拆分文档和执行计划
-
-    - trigger: feature_list
-      effects: [decomposition_doc, execution_plan]
-      action: regenerate
-      description: Feature 列表调整时，更新拆分文档
-
-  # 产物模板
-  templates:
-    requirement_spec: |
-      # 需求规格文档: {{program.name}}
-
-      > 生成时间: {{timestamp}}
-      > 基于流程: {{workflow.name}} v{{workflow.version}}
-
-      ## 1. 需求概述
-
-      ### 1.1 业务目标
-      <!-- 解决什么问题，预期收益 -->
-
-      ### 1.2 用户角色
-      | 角色 | 描述 | 主要操作 |
-      |------|------|----------|
-
-      ### 1.3 使用场景
-      <!-- 典型操作流程描述 -->
-
-      ## 2. 功能清单
-
-      ### 2.1 管理端功能
-      | 功能 | 描述 | 优先级 |
-      |------|------|--------|
-
-      ### 2.2 用户端功能（如有）
-      | 功能 | 描述 | 优先级 |
-      |------|------|--------|
-
-      ## 3. 接口草案
-
-      | 接口 | 方法 | 路径 | 描述 | 调用方 |
-      |------|------|------|------|--------|
-
-      ## 4. 数据模型草案
-
-      ### 4.1 新建表
-      | 表名 | 描述 | 核心字段 |
-      |------|------|----------|
-
-      ### 4.2 变更表
-      | 表名 | 变更内容 |
-      |------|----------|
-
-      ## 5. 业务规则汇总
-
-      ### 5.1 校验规则
-      <!-- 必填字段、格式限制等 -->
-
-      ### 5.2 状态流转
-      <!-- 状态机描述 -->
-
-      ### 5.3 权限控制
-      <!-- 角色权限说明 -->
-
-      ## 6. 服务范围
-
-      | 服务 | 层级 | 变更类型 | 说明 |
-      |------|------|----------|------|
-
-      ## 7. Feature 拆分建议
-
-      ```yaml
-      features:
-        - id: F-XXX
-          name: 功能名称
-          description: 功能描述
-          services: [service1, service2]
-          priority: high/medium/low
-          dependencies: []
-          estimated_complexity: simple/medium/complex
-      ```
-
-  # 执行约束
+  # 约束
   constraints:
-    require_business_goal_clarification: true   # 必须先明确业务目标
-    require_user_confirmation_each_step: true   # 每个澄清步骤需用户确认
-    require_spec_before_feature_split: true     # 必须先生成规格书再拆 Feature
+    one_program_per_requirement: true         # 一次需求澄清 = 一个 Program
+    one_feature_per_clarification: true       # 一次澄清 = 一个 Feature，不拆分
+    handle_complexity_by_steps: true          # 复杂需求通过增加实现步骤解决
+    require_user_confirmation_each_step: true # 每个澄清步骤需用户确认
     output_compatible_with_feature_implementation: true  # 输出必须兼容 feature-implementation
 
   # 与下游流程对接
   downstream_workflows:
     - name: feature-implementation
-      trigger: 每个 Feature 独立触发
-      input_mapping:
-        feature_id: "从 decomposition_doc 中的 Feature ID"
-        decomposition_report: "workspace/outputs/decomposition.md"
+      trigger: req-clarification 完成后触发
       how_to_trigger: |
-        完成本流程后，对每个 Feature 执行：
-        "继续 feature-implementation，Feature ID: F-XXX"
-
-  # 与上游流程关系
-  upstream_workflows:
-    - name: 无（本流程为起点）
-      description: 本流程接受原始模糊需求，无需前置流程
-
-  # 与 req-decomposition 的区别
-  vs_req_decomposition:
-    description: |
-      req-clarification（本流程）vs req-decomposition 的关键区别：
-
-      | 维度 | req-clarification | req-decomposition |
-      |------|------------------|-------------------|
-      | 输入 | 模糊需求描述（几句话/草稿） | 完整 PRD 文档 |
-      | 起点 | 需求尚未明确 | 需求已明确但需拆分 |
-      | 核心工作 | 通过访谈明确需求 + 生成规格 | 将 PRD 拆分为 Feature |
-      | 人工交互 | 多轮访谈，交互密集 | 主要为确认性交互 |
-      | 输出 | requirement-spec + decomposition | decomposition |
-      | 下游 | feature-implementation | feature-implementation |
+        需求澄清完成后，直接启动实现：
+        "继续 feature-implementation，需求文档：workspace/outputs/requirement-spec.md"
+      input_mapping:
+        requirement_spec: "workspace/outputs/requirement-spec.md"
 
   # 元数据
   metadata:
     author: workflow-designer
     created: "2026-03-19"
-    tags: [requirement, clarification, analysis, feature-planning]
-    related_programs: []
+    updated: "2026-03-20"
+    version_notes: "v2.1 - 聚焦单一 Feature，去掉 Feature 拆分步骤，通过增加步骤处理复杂性"
+    tags: [requirement, clarification, analysis, single-feature]
     downstream_workflow: feature-implementation

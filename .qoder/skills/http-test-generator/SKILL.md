@@ -41,6 +41,8 @@ dependencies:
 |--------|------|------|
 | test_cases | `workspace/outputs/testing/test-cases.yml` | 测试用例文件 |
 | test_plan | `workspace/outputs/testing/test-plan.yml` | 测试执行计划 |
+| http_file | `outputs/data/http/{module}-api.http` | IntelliJ HTTP Client 测试文件 |
+| curl_script | `outputs/data/http/{module}-api-curl.sh` | curl 命令脚本（可直接在终端执行） |
 
 ---
 
@@ -77,6 +79,22 @@ dependencies:
 4. 定义响应断言规则
 5. 标注测试优先级
 6. 生成测试执行计划
+7. 生成 IntelliJ HTTP Client 文件（`.http`）
+8. 生成 curl 命令脚本（`.sh`）
+
+---
+
+## curl 脚本规范
+
+生成 `{module}-api-curl.sh` 时遵循以下规则：
+
+- **头部**：包含 `#!/bin/bash`、功能说明注释、使用方式说明
+- **环境变量**：使用 `BASE_URL` 和 `USER_TOKEN`，默认值指向 dev 环境
+- **每条用例**：前加注释行 `# TC00X: 用例名称`，再加 `echo "[TC00X] 用例名称"` 输出提示
+- **POST/PUT**：使用 `-d '...'` 传递 JSON 请求体
+- **GET**：URL 拼接查询参数
+- **变量传递**：链式依赖时用 shell 变量保存上一步返回的 ID（通过 `grep -o` 提取）
+- **输出格式化**：追加 `| python3 -m json.tool 2>/dev/null || echo "${RESPONSE}"` 美化 JSON 输出
 
 ---
 
@@ -101,6 +119,8 @@ dependencies:
 产出：
   - 测试用例：workspace/outputs/testing/test-cases.yml
   - 测试计划：workspace/outputs/testing/test-plan.yml
+  - HTTP 测试文件：outputs/data/http/{module}-api.http
+  - curl 脚本：outputs/data/http/{module}-api-curl.sh
 
 下一步：进入 execute 阶段执行测试
 ```

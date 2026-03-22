@@ -155,7 +155,9 @@ test_plan:
 
 ### 步骤 6：生成 HTTP 测试文件
 
-生成 {module}-api.http 文件：
+同时生成两种格式：
+
+**格式 A：{module}-api.http 文件（IntelliJ HTTP Client）**
 
 ```http
 ### 创建岗位类型-正常
@@ -200,6 +202,59 @@ X-User-Token: {{userToken}}
 %}
 ```
 
+**格式 B：{module}-api-curl.sh 文件（curl 命令脚本）**
+
+```bash
+#!/bin/bash
+# {module} API 测试脚本
+# 使用方式: ./outputs/data/http/{module}-api-curl.sh
+
+BASE_URL="${BASE_URL:-http://dev-gateway-addr}"
+USER_TOKEN="${USER_TOKEN:-your-dev-token}"
+
+echo "========================================="
+echo " {module} API 测试"
+echo "========================================="
+
+# TC001: 创建岗位类型-正常
+echo ""
+echo "[TC001] 创建岗位类型-正常"
+RESPONSE=$(curl -s -X POST "${BASE_URL}/admin/api/v1/job-type/create" \
+  -H "Content-Type: application/json" \
+  -H "X-User-Token: ${USER_TOKEN}" \
+  -d '{
+    "name": "销售专员",
+    "description": "负责客户开发和维护",
+    "sortOrder": 1
+  }')
+echo "响应: ${RESPONSE}"
+JOB_TYPE_ID=$(echo ${RESPONSE} | grep -o '"data":[0-9]*' | grep -o '[0-9]*')
+echo "创建ID: ${JOB_TYPE_ID}"
+
+# TC002: 查询岗位类型详情-正常
+echo ""
+echo "[TC002] 查询岗位类型详情"
+curl -s -X GET "${BASE_URL}/admin/api/v1/job-type/detail/${JOB_TYPE_ID}" \
+  -H "X-User-Token: ${USER_TOKEN}" | python3 -m json.tool 2>/dev/null || echo "${RESPONSE}"
+
+# TC010: 创建岗位类型-名称为空（异常）
+echo ""
+echo "[TC010] 创建岗位类型-名称为空（期望失败）"
+curl -s -X POST "${BASE_URL}/admin/api/v1/job-type/create" \
+  -H "Content-Type: application/json" \
+  -H "X-User-Token: ${USER_TOKEN}" \
+  -d '{"name": "", "description": "测试"}' | python3 -m json.tool 2>/dev/null || echo "${RESPONSE}"
+```
+
+**curl 脚本生成规则**：
+- 每条 curl 命令前加注释行标明用例 ID 和名称
+- 使用环境变量 `BASE_URL` 和 `USER_TOKEN`，默认值指向 dev 环境
+- POST/PUT 请求使用 `-d` 传递 JSON 体
+- GET 请求使用 URL 参数拼接
+- 链式调用时使用 shell 变量传递上一步的结果（如 ID）
+- 使用 `python3 -m json.tool` 格式化输出（不可用时降级输出原始响应）
+- 脚本开头添加 `#!/bin/bash` 和使用说明注释
+
 ---
 
 ## 决策点
@@ -237,6 +292,7 @@ X-User-Token: {{userToken}}
 - 测试计划：workspace/outputs/testing/test-plan.yml
 - 测试数据：workspace/outputs/testing/test-data.yml
 - HTTP 测试文件：outputs/data/http/{module}-api.http
+- curl 脚本：outputs/data/http/{module}-api-curl.sh
 
 下一步：进入 execute 阶段执行测试
 ```
